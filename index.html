@@ -292,6 +292,7 @@
     }
 
     function goToMain() {
+        console.log('Saving colors to localStorage:', currentColors); // Отладка
         localStorage.setItem('generatedColors', JSON.stringify(currentColors));
         window.location.href = 'main.html';
     }

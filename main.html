@@ -110,8 +110,8 @@
                                 <option>Точки</option>
                                 <option>Фигуры</option>
                                 <option>Смешанный</option>
-<!--                                 <option>Ветви</option> -->
-<!--                                 <option>Спираль</option> -->
+                                <!-- <option>Ветви</option> -->
+                                <!-- <option>Спираль</option> -->
                                 <option>Орбиты</option>
                             </select>
                         </div>
@@ -467,35 +467,49 @@
         let currentImage = null;
 
         function loadPalette() {
-            const saved = localStorage.getItem('palette');
-            if (saved) {
-                try {
-                    const json = JSON.parse(saved);
-                    if (Object.keys(json).every(k => Array.isArray(json[k]) && json[k].length === 4 && json[k].slice(0, 3).every(c => Number.isInteger(c) && c >= 0 && c <= 255) && json[k][3] >= 0 && json[k][3] <= 1)) {
-                        return json;
-                    }
-                } catch (e) {}
-            }
-
+            // Сначала проверяем generatedColors
             const generatedColors = localStorage.getItem('generatedColors');
             if (generatedColors) {
                 try {
                     const colors = JSON.parse(generatedColors);
+                    console.log('Loaded generatedColors:', colors); // Отладка
                     if (Array.isArray(colors) && colors.every(c => /^#[0-9A-Fa-f]{6}$/.test(c))) {
-                        const palette = {};
+                        const newPalette = {};
                         colors.forEach((color, index) => {
                             const rgb = hexToRgb(color);
-                            palette[(index + 1).toString()] = [...rgb, 1];
+                            newPalette[(index + 1).toString()] = [...rgb, 1];
                         });
-                        return palette;
+                        // Сохраняем новую палитру в localStorage
+                        localStorage.setItem('palette', JSON.stringify(newPalette));
+                        console.log('New palette saved:', newPalette); // Отладка
+                        return newPalette;
                     }
-                } catch (e) {}
+                } catch (e) {
+                    console.error('Error parsing generatedColors:', e); // Отладка
+                }
             }
 
+            // Если generatedColors нет, проверяем сохранённую палитру
+            const saved = localStorage.getItem('palette');
+            if (saved) {
+                try {
+                    const json = JSON.parse(saved);
+                    console.log('Loaded saved palette:', json); // Отладка
+                    if (Object.keys(json).every(k => Array.isArray(json[k]) && json[k].length === 4 && json[k].slice(0, 3).every(c => Number.isInteger(c) && c >= 0 && c <= 255) && json[k][3] >= 0 && json[k][3] <= 1)) {
+                        return json;
+                    }
+                } catch (e) {
+                    console.error('Error parsing saved palette:', e); // Отладка
+                }
+            }
+
+            // Если ничего не загружено, используем дефолтную палитру
+            console.log('Using default palette:', DEFAULT_PALETTE); // Отладка
             return DEFAULT_PALETTE;
         }
 
         function savePalette() {
+            console.log('Saving palette to localStorage:', palette); // Отладка
             localStorage.setItem('palette', JSON.stringify(palette));
         }
 

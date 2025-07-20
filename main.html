@@ -51,7 +51,7 @@
             background: #7c3aed;
         }
         #imageModal {
-            display: none; /* Initially hidden */
+            display: none;
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.7);
@@ -61,12 +61,39 @@
             padding: 1rem;
         }
         #imageModal.show {
-            display: flex; /* Show modal when 'show' class is added */
+            display: flex;
+        }
+        details summary {
+            cursor: pointer;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #4c1d95;
+            padding: 0.5rem;
+        }
+        details summary:hover {
+            color: #7c3aed;
+        }
+        details p {
+            margin-top: 0.5rem;
+            color: #374151;
         }
     </style>
 </head>
 <body class="font-sans text-gray-900">
     <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-7xl">
+        <details class="card p-4 rounded-xl shadow-lg mb-6">
+            <summary>Инструкции</summary>
+            <p>Добро пожаловать в Генератор калейдоскопов! Следуйте этим шагам, чтобы создать уникальные узоры:</p>
+            <ul class="list-disc pl-5 mt-2">
+                <li><strong>Выбор узора:</strong> В разделе "Настройки узора" выберите тип узора (Линии, Точки, Фигуры, Смешанный, Орбиты) из выпадающего списка.</li>
+                <li><strong>Настройка параметров:</strong> Используйте ползунки для регулировки количества элементов (от 100 до 1000) и секторов (от 3 до 40).</li>
+                <li><strong>Управление палитрой:</strong> В разделе "Палитра цветов" добавляйте новые цвета (до 20), удаляйте последний цвет или изменяйте существующие, кликая по цветным кнопкам. Для изменения цвета используйте палитру и ползунок прозрачности.</li>
+                <li><strong>Генерация узора:</strong> Нажмите "Сгенерировать" для создания узора в окне предпросмотра.</li>
+                <li><strong>Просмотр изображения:</strong> Нажмите "Открыть полное изображение" для просмотра узора в большом окне. Закройте его кнопкой "Закрыть".</li>
+                <li><strong>Сохранение:</strong> Нажмите "Сохранить изображение" для скачивания узора в формате PNG.</li>
+                <li><strong>Возврат:</strong> Нажмите "← Вернуться" для возврата на главную страницу.</li>
+            </ul>
+        </details>
         <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-white mb-8 drop-shadow-lg">Генератор калейдоскопов</h1>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -160,10 +187,10 @@
         const CANVAS_PX = MAIN_PX;
 
         const DEFAULT_PALETTE = {
-            'А': [245, 245, 220, 1], // Light Beige
-            'Б': [0, 0, 0, 1],       // Black
-            'В': [255, 255, 0, 1],   // Yellow
-            'Г': [255, 0, 255, 1]    // Magenta
+            '1': [245, 245, 220, 1], // Light Beige
+            '2': [0, 0, 0, 1],       // Black
+            '3': [255, 255, 0, 1],   // Yellow
+            '4': [255, 0, 255, 1]    // Magenta
         };
 
         const AVAILABLE_COLORS = [
@@ -449,6 +476,22 @@
                     }
                 } catch (e) {}
             }
+
+            const generatedColors = localStorage.getItem('generatedColors');
+            if (generatedColors) {
+                try {
+                    const colors = JSON.parse(generatedColors);
+                    if (Array.isArray(colors) && colors.every(c => /^#[0-9A-Fa-f]{6}$/.test(c))) {
+                        const palette = {};
+                        colors.forEach((color, index) => {
+                            const rgb = hexToRgb(color);
+                            palette[(index + 1).toString()] = [...rgb, 1];
+                        });
+                        return palette;
+                    }
+                } catch (e) {}
+            }
+
             return DEFAULT_PALETTE;
         }
 
@@ -464,7 +507,7 @@
                 row.innerHTML = `
                     <td class="border-b p-3 text-center text-gray-700">${key}</td>
                     <td class="border-b p-3">
-                        <button class="color-btn" style="background-color: rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]});" title="Выберите цвет и прозрачность для ${key}"></button>
+                        <button class="color-btn" style="background-color: rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]});" title="Выберите цвет и прозрачность для ключа ${key}"></button>
                     </td>
                 `;
                 row.querySelector('.color-btn').addEventListener('click', () => changeColor(index));
@@ -477,7 +520,7 @@
                 alert('Максимум 20 цветов в палитре!');
                 return;
             }
-            const newKey = String.fromCharCode(1040 + Object.keys(palette).length); // Russian alphabet starting from А (1040)
+            const newKey = (Object.keys(palette).length + 1).toString();
             const newColor = AVAILABLE_COLORS[Math.floor(Math.random() * AVAILABLE_COLORS.length)];
             palette[newKey] = newColor;
             updatePaletteTable();
@@ -501,7 +544,7 @@
             modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
             modal.innerHTML = `
                 <div class="bg-white p-6 rounded-lg max-w-sm w-full">
-                    <h3 class="text-lg font-semibold mb-4">Выбор цвета и прозрачности для ${key}</h3>
+                    <h3 class="text-lg font-semibold mb-4">Выбор цвета и прозрачности для ключа ${key}</h3>
                     <input type="color" id="colorPicker" value="${rgbToHex(palette[key])}" class="w-full h-12 mb-4">
                     <label class="block text-sm font-medium mb-1">Прозрачность: <span id="opacityValue">${palette[key][3]}</span></label>
                     <input type="range" id="opacitySlider" min="0" max="1" step="0.01" value="${palette[key][3]}" class="w-full mb-4">

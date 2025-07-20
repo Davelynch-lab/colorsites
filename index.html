@@ -97,7 +97,6 @@
             background: #357ABD;
         }
 
-        /* Popup modal */
         #popupOverlay {
             display: none;
             position: fixed;
@@ -135,7 +134,7 @@
         }
 
         #continueBtn {
-            margin-top: 10px; /* Add spacing for better layout */
+            margin-top: 10px;
         }
 
         @media(max-width: 600px) {
@@ -164,7 +163,7 @@
         2. Текст будет автоматически очищен от пробелов и знаков препинания.<br>
         3. Опционально укажите символы, которые хотите удалить.<br>
         4. Нажмите "Получить цвета".<br>
-        5. Скачайте Excel-файл с цветными ячейками.<br><br>
+        5. Скачайте Excel-файл с цветными ячейками или нажмите "Продолжить" для использования цветов в генераторе калейдоскопов.<br><br>
         Каждая ячейка в файле будет окрашена в соответствующий цвет.<br><br>
         <button onclick="togglePopup()">Понятно</button>
     </div>
@@ -210,9 +209,7 @@
     }
 
     document.getElementById('textInput').addEventListener('input', function() {
-        // Automatically clean input by removing spaces and punctuation
         let text = this.value.replace(/[^a-zA-Zа-яА-Я0-9]/g, '');
-        // Truncate to 700 characters
         text = text.slice(0, 700);
         this.value = text;
         const count = text.length;
@@ -295,9 +292,9 @@
     }
 
     function goToMain() {
+        localStorage.setItem('generatedColors', JSON.stringify(currentColors));
         window.location.href = 'main.html';
     }
 </script>
-
 </body>
 </html>

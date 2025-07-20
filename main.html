@@ -25,6 +25,17 @@
         .color-btn:hover {
             transform: scale(1.05);
         }
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 6px;
+            border-radius: 6px;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+        .delete-btn:hover {
+            background: #c0392b;
+        }
         #previewCanvas {
             max-width: 300px;
             width: 100%;
@@ -87,7 +98,7 @@
             <ul class="list-disc pl-5 mt-2">
                 <li><strong>Выбор узора:</strong> В разделе "Настройки узора" выберите тип узора (Линии, Точки, Фигуры, Смешанный, Орбиты) из выпадающего списка.</li>
                 <li><strong>Настройка параметров:</strong> Используйте ползунки для регулировки количества элементов (от 100 до 1000) и секторов (от 3 до 40).</li>
-                <li><strong>Управление палитрой:</strong> В разделе "Палитра цветов" добавляйте новые цвета (до 20), удаляйте последний цвет или изменяйте существующие, кликая по цветным кнопкам. Для изменения цвета используйте палитру и ползунок прозрачности.</li>
+                <li><strong>Управление палитрой:</strong> В разделе "Палитра цветов" добавляйте новые цвета (до 20), удаляйте последний цвет или изменяйте существующие, кликая по цветным кнопкам. Для изменения цвета используйте палитру и ползунок прозрачности. Нажмите "Удалить" рядом с цветом, чтобы удалить конкретный цвет.</li>
                 <li><strong>Генерация узора:</strong> Нажмите "Сгенерировать" для создания узора в окне предпросмотра.</li>
                 <li><strong>Просмотр изображения:</strong> Нажмите "Открыть полное изображение" для просмотра узора в большом окне. Закройте его кнопкой "Закрыть".</li>
                 <li><strong>Сохранение:</strong> Нажмите "Сохранить изображение" для скачивания узора в формате PNG.</li>
@@ -110,8 +121,6 @@
                                 <option>Точки</option>
                                 <option>Фигуры</option>
                                 <option>Смешанный</option>
-                                <!-- <option>Ветви</option> -->
-                                <!-- <option>Спираль</option> -->
                                 <option>Орбиты</option>
                             </select>
                         </div>
@@ -135,6 +144,7 @@
                                 <tr>
                                     <th class="border-b-2 p-3 text-left text-gray-700 w-16">Ключ</th>
                                     <th class="border-b-2 p-3 text-left text-gray-700">Цвет</th>
+                                    <th class="border-b-2 p-3 text-left text-gray-700 w-24">Действие</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -142,7 +152,7 @@
                     </div>
                     <div class="flex flex-col sm:flex-row gap-3">
                         <button id="addColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors" title="Добавить новый цвет в палитру">Добавить цвет</button>
-                        <button id="removeColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors" title="Удалить последний цвет из палитры">Удалить цвет</button>
+                        <button id="removeColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors" title="Удалить последний цвет из палитры">Удалить последний</button>
                     </div>
                 </div>
             </div>
@@ -472,20 +482,19 @@
             if (generatedColors) {
                 try {
                     const colors = JSON.parse(generatedColors);
-                    console.log('Loaded generatedColors:', colors); // Отладка
+                    console.log('Loaded generatedColors:', colors);
                     if (Array.isArray(colors) && colors.every(c => /^#[0-9A-Fa-f]{6}$/.test(c))) {
                         const newPalette = {};
                         colors.forEach((color, index) => {
                             const rgb = hexToRgb(color);
                             newPalette[(index + 1).toString()] = [...rgb, 1];
                         });
-                        // Сохраняем новую палитру в localStorage
                         localStorage.setItem('palette', JSON.stringify(newPalette));
-                        console.log('New palette saved:', newPalette); // Отладка
+                        console.log('New palette saved:', newPalette);
                         return newPalette;
                     }
                 } catch (e) {
-                    console.error('Error parsing generatedColors:', e); // Отладка
+                    console.error('Error parsing generatedColors:', e);
                 }
             }
 
@@ -494,22 +503,22 @@
             if (saved) {
                 try {
                     const json = JSON.parse(saved);
-                    console.log('Loaded saved palette:', json); // Отладка
+                    console.log('Loaded saved palette:', json);
                     if (Object.keys(json).every(k => Array.isArray(json[k]) && json[k].length === 4 && json[k].slice(0, 3).every(c => Number.isInteger(c) && c >= 0 && c <= 255) && json[k][3] >= 0 && json[k][3] <= 1)) {
                         return json;
                     }
                 } catch (e) {
-                    console.error('Error parsing saved palette:', e); // Отладка
+                    console.error('Error parsing saved palette:', e);
                 }
             }
 
             // Если ничего не загружено, используем дефолтную палитру
-            console.log('Using default palette:', DEFAULT_PALETTE); // Отладка
+            console.log('Using default palette:', DEFAULT_PALETTE);
             return DEFAULT_PALETTE;
         }
 
         function savePalette() {
-            console.log('Saving palette to localStorage:', palette); // Отладка
+            console.log('Saving palette to localStorage:', palette);
             localStorage.setItem('palette', JSON.stringify(palette));
         }
 
@@ -523,8 +532,12 @@
                     <td class="border-b p-3">
                         <button class="color-btn" style="background-color: rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]});" title="Выберите цвет и прозрачность для ключа ${key}"></button>
                     </td>
+                    <td class="border-b p-3">
+                        <button class="delete-btn" title="Удалить цвет с ключом ${key}">Удалить</button>
+                    </td>
                 `;
                 row.querySelector('.color-btn').addEventListener('click', () => changeColor(index));
+                row.querySelector('.delete-btn').addEventListener('click', () => removeSpecificColor(key));
                 tbody.appendChild(row);
             });
         }
@@ -548,6 +561,22 @@
             }
             const keys = Object.keys(palette);
             delete palette[keys[keys.length - 1]];
+            updatePaletteTable();
+            savePalette();
+        }
+
+        function removeSpecificColor(key) {
+            if (Object.keys(palette).length <= 1) {
+                alert('Минимум 1 цвет в палитре!');
+                return;
+            }
+            delete palette[key];
+            // Пересортировка ключей
+            const newPalette = {};
+            Object.values(palette).forEach((color, index) => {
+                newPalette[(index + 1).toString()] = color;
+            });
+            palette = newPalette;
             updatePaletteTable();
             savePalette();
         }

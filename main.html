@@ -127,9 +127,9 @@
                 </div>
             </div>
         </div>
-        <button id="home" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors" style="margin-top: 20px;" title="Сохранить текущий узор как изображение">← Вернуться</button>
+        <button id="home" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors" style="margin-top: 20px;" title="Вернуться на главную страницу">← Вернуться</button>
         <!-- Full Image Modal -->
-        <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center p-4 z-50">
+        <div id="image In modal">
             <div class="bg-white p-6 rounded-xl max-w-[90vw] max-h-[90vh] overflow-auto">
                 <canvas id="fullCanvas" class="mx-auto"></canvas>
                 <div class="text-center mt-4">
@@ -147,22 +147,18 @@
         const CANVAS_PX = MAIN_PX;
 
         const DEFAULT_PALETTE = {
-            'A': [255, 0, 0],
-            'B': [0, 255, 0],
-            'C': [0, 0, 255],
-            'D': [255, 255, 0],
-            'E': [255, 0, 255],
-            'F': [0, 255, 255],
-            'G': [128, 0, 128],
-            'H': [255, 165, 0],
-            'I': [0, 128, 128],
-            'J': [128, 128, 0],
-            'K': [255, 192, 203],
-            'L': [139, 69, 19],
-            'M': [0, 128, 0],
-            'N': [255, 215, 0],
-            'O': [75, 0, 130],
+            'А': [245, 245, 220, 1], // Light Beige
+            'Б': [0, 0, 0, 1],       // Black
+            'В': [255, 255, 0, 1],   // Yellow
+            'Г': [255, 0, 255, 1]    // Magenta
         };
+
+        const AVAILABLE_COLORS = [
+            [245, 245, 220, 1], // Light Beige
+            [0, 0, 0, 1],       // Black
+            [255, 255, 0, 1],   // Yellow
+            [255, 0, 255, 1]    // Magenta
+        ];
 
         class KaleidoGenerator {
             constructor(size_px, palette, mode = 'Lines', sectors = 12, elements = 300, slices = 13) {
@@ -209,13 +205,13 @@
                         ];
                         const color1 = this.palette[Math.floor(Math.random() * this.palette.length)];
                         const color2 = this.palette[Math.floor(Math.random() * this.palette.length)];
-                        ctx.fillStyle = `rgb(${color1[0]}, ${color1[1]}, ${color1[2]})`;
+                        ctx.fillStyle = `rgba(${color1[0]}, ${color1[1]}, ${color1[2]}, ${color1[3]})`;
                         ctx.beginPath();
                         ctx.moveTo(points[0][0], points[0][1]);
                         ctx.lineTo(points[1][0], points[1][1]);
                         ctx.lineTo(points[2][0], points[2][1]);
                         ctx.fill();
-                        ctx.fillStyle = `rgb(${color2[0]}, ${color2[1]}, ${color2[2]})`;
+                        ctx.fillStyle = `rgba(${color2[0]}, ${color2[1]}, ${color2[2]}, ${color2[3]})`;
                         ctx.beginPath();
                         ctx.moveTo(points[0][0], points[0][1]);
                         ctx.lineTo(points[2][0], points[2][1]);
@@ -240,7 +236,7 @@
                     s.size = Math.min(size * 0.3, 150);
                     const points = [];
                     const color = this.palette[Math.floor(Math.random() * this.palette.length)];
-                    ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+                    ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]})`;
                     ctx.lineWidth = 2;
                     ctx.beginPath();
                     ctx.moveTo(cx, cy);
@@ -292,8 +288,9 @@
                             const r_col = Math.round(this.palette[color_idx][0] * (1 - t) + this.palette[next_color_idx][0] * t);
                             const g_col = Math.round(this.palette[color_idx][1] * (1 - t) + this.palette[next_color_idx][1] * t);
                             const b_col = Math.round(this.palette[color_idx][2] * (1 - t) + this.palette[next_color_idx][2] * t);
+                            const a_col = this.palette[color_idx][3] * (1 - t) + this.palette[next_color_idx][3] * t;
                             const width = Math.max(1, Math.floor(Math.random() * 5 + 1 + 3 * Math.sin(r * 0.05)));
-                            ctx.fillStyle = `rgb(${r_col}, ${g_col}, ${b_col})`;
+                            ctx.fillStyle = `rgba(${r_col}, ${g_col}, ${b_col}, ${a_col})`;
                             ctx.beginPath();
                             ctx.arc(x, y, width, 0, 2 * Math.PI);
                             ctx.fill();
@@ -345,8 +342,8 @@
                 } else {
                     for (let i = 0; i < this.elements; i++) {
                         const color = this.palette[Math.floor(Math.random() * this.palette.length)];
-                        ctx.fillStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
-                        ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+                        ctx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]})`;
+                        ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]})`;
                         if (this.mode === 'Lines') {
                             const r1 = Math.random() * radius;
                             const theta1 = (Math.random() * angle - angle / 2) * Math.PI / 180;
@@ -415,7 +412,7 @@
                 const x2 = x + Math.cos(new_angle) * new_size;
                 const y2 = y + Math.sin(new_angle) * new_size;
                 const color = this.palette[Math.floor(Math.random() * this.palette.length)];
-                ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+                ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]})`;
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(x, y);
@@ -434,7 +431,7 @@
             if (saved) {
                 try {
                     const json = JSON.parse(saved);
-                    if (Object.keys(json).every(k => Array.isArray(json[k]) && json[k].length === 3 && json[k].every(c => Number.isInteger(c) && c >= 0 && c <= 255))) {
+                    if (Object.keys(json).every(k => Array.isArray(json[k]) && json[k].length === 4 && json[k].slice(0, 3).every(c => Number.isInteger(c) && c >= 0 && c <= 255) && json[k][3] >= 0 && json[k][3] <= 1)) {
                         return json;
                     }
                 } catch (e) {}
@@ -454,7 +451,7 @@
                 row.innerHTML = `
                     <td class="border-b p-3 text-center text-gray-700">${key}</td>
                     <td class="border-b p-3">
-                        <button class="color-btn" style="background-color: rgb(${color[0]}, ${color[1]}, ${color[2]});" title="Выберите цвет для ${key}"></button>
+                        <button class="color-btn" style="background-color: rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]});" title="Выберите цвет и прозрачность для ${key}"></button>
                     </td>
                 `;
                 row.querySelector('.color-btn').addEventListener('click', () => changeColor(index));
@@ -467,8 +464,9 @@
                 alert('Максимум 20 цветов в палитре!');
                 return;
             }
-            const newKey = String.fromCharCode(65 + Object.keys(palette).length);
-            palette[newKey] = [Math.floor(Math.random() * 256), Math.floor(Math.random() * 256), Math.floor(Math.random() * 256)];
+            const newKey = String.fromCharCode(1040 + Object.keys(palette).length); // Russian alphabet starting from А (1040)
+            const newColor = AVAILABLE_COLORS[Math.floor(Math.random() * AVAILABLE_COLORS.length)];
+            palette[newKey] = newColor;
             updatePaletteTable();
             savePalette();
         }
@@ -486,16 +484,38 @@
 
         function changeColor(row) {
             const key = Object.keys(palette)[row];
-            const input = document.createElement('input');
-            input.type = 'color';
-            input.value = rgbToHex(palette[key]);
-            input.addEventListener('change', () => {
-                const color = hexToRgb(input.value);
-                palette[key] = color;
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white p-6 rounded-lg max-w-sm w-full">
+                    <h3 class="text-lg font-semibold mb-4">Выбор цвета и прозрачности для ${key}</h3>
+                    <input type="color" id="colorPicker" value="${rgbToHex(palette[key])}" class="w-full h-12 mb-4">
+                    <label class="block text-sm font-medium mb-1">Прозрачность: <span id="opacityValue">${palette[key][3]}</span></label>
+                    <input type="range" id="opacitySlider" min="0" max="1" step="0.01" value="${palette[key][3]}" class="w-full mb-4">
+                    <div class="flex justify-end gap-3">
+                        <button id="cancelBtn" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Отмена</button>
+                        <button id="saveColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Сохранить</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('opacitySlider').addEventListener('input', (e) => {
+                document.getElementById('opacityValue').textContent = e.target.value;
+            });
+
+            document.getElementById('saveColorBtn').addEventListener('click', () => {
+                const color = hexToRgb(document.getElementById('colorPicker').value);
+                const opacity = parseFloat(document.getElementById('opacitySlider').value);
+                palette[key] = [...color, opacity];
                 updatePaletteTable();
                 savePalette();
+                document.body.removeChild(modal);
             });
-            input.click();
+
+            document.getElementById('cancelBtn').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
         }
 
         function rgbToHex([r, g, b]) {
@@ -596,11 +616,12 @@
             document.getElementById('imageModal').classList.add('hidden');
         });
 
+        document.getElementById('home').addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+
         // Initialize
         updatePaletteTable();
     </script>
-        <script>document.getElementById('home').addEventListener('click', () => {
-            window.location.href = 'index.html';
-        });</script>
 </body>
 </html>

@@ -50,6 +50,19 @@
         .custom-range::-moz-range-thumb {
             background: #7c3aed;
         }
+        #imageModal {
+            display: none; /* Initially hidden */
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        #imageModal.show {
+            display: flex; /* Show modal when 'show' class is added */
+        }
     </style>
 </head>
 <body class="font-sans text-gray-900">
@@ -129,7 +142,7 @@
         </div>
         <button id="home" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors" style="margin-top: 20px;" title="Вернуться на главную страницу">← Вернуться</button>
         <!-- Full Image Modal -->
-        <div id="image In modal">
+        <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center p-4 z-50">
             <div class="bg-white p-6 rounded-xl max-w-[90vw] max-h-[90vh] overflow-auto">
                 <canvas id="fullCanvas" class="mx-auto"></canvas>
                 <div class="text-center mt-4">
@@ -569,7 +582,7 @@
                 parseInt(document.getElementById('slicesSlider').value)
             );
             gen.generate(fullCanvas);
-            modal.classList.remove('hidden');
+            modal.classList.add('show');
         }
 
         function save() {
@@ -613,7 +626,7 @@
         document.getElementById('viewBtn').addEventListener('click', openFullImage);
         document.getElementById('saveBtn').addEventListener('click', save);
         document.getElementById('closeModalBtn').addEventListener('click', () => {
-            document.getElementById('imageModal').classList.add('hidden');
+            document.getElementById('imageModal').classList.remove('show');
         });
 
         document.getElementById('home').addEventListener('click', () => {

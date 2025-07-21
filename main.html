@@ -205,10 +205,13 @@
 
         const AVAILABLE_COLORS = [
             [245, 245, 220, 1], // Light Beige
-            [0, 0, 0, 1],       // Black
             [255, 255, 0, 1],   // Yellow
-            [255, 0, 255, 1]    // Magenta
+            [0, 0, 0, 1],       // Black
+            [255, 0, 255, 1],   // Magenta
+            [144, 238, 144, 1]  // Light Green
         ];
+
+        let colorIndex = 0; // Track the next color to add
 
         class KaleidoGenerator {
             constructor(size_px, palette, mode = 'Lines', sectors = 12, elements = 300, slices = 13) {
@@ -548,8 +551,9 @@
                 return;
             }
             const newKey = (Object.keys(palette).length + 1).toString();
-            const newColor = AVAILABLE_COLORS[Math.floor(Math.random() * AVAILABLE_COLORS.length)];
+            const newColor = AVAILABLE_COLORS[colorIndex % AVAILABLE_COLORS.length];
             palette[newKey] = newColor;
+            colorIndex = (colorIndex + 1) % AVAILABLE_COLORS.length; // Move to next color
             updatePaletteTable();
             savePalette();
         }

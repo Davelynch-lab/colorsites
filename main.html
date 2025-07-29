@@ -118,7 +118,7 @@
             <summary>Инструкции</summary>
             <p>Добро пожаловать в Генератор калейдоскопов! Следуйте этим шагам:</p>
             <ul class="list-disc pl-5 mt-2">
-                <li><strong>Выбор узора:</strong> Выберите тип узора (Линии, Точки, Фигуры, Смешанный, Ветви, Спираль, Орбиты).</li>
+                <li><strong>Выбор узора:</strong> Выберите тип узора (Линии, Точки, Фигуры, Смешанный, Ветви, Спираль, Орбиты, Точки в Фигуры).</li>
                 <li><strong>Настройка параметров:</strong> Регулируйте количество элементов (100–1000), секторов (3–40) и скорость анимации (0.05–0.5).</li>
                 <li><strong>Палитра:</strong> Добавляйте до 20 цветов, удаляйте или изменяйте их.</li>
                 <li><strong>Генерация:</strong> Нажмите "Сгенерировать" для создания узора.</li>
@@ -142,9 +142,10 @@
                                 <option>Точки</option>
                                 <option>Фигуры</option>
                                 <option>Смешанный</option>
-                                <!-- <option>Ветви</option> -->
-                                <option>Спираль</option> 
+                                <option>Ветви</option>
+                                <option>Спираль</option>
                                 <option>Орбиты</option>
+                                <option>Точки в Фигуры</option>
                             </select>
                         </div>
                         <div>
@@ -215,7 +216,7 @@
         const MAIN_CM = 15;
         const MAIN_PX = Math.round(MAIN_CM * CM_TO_INCH * DPI);
         const CANVAS_PX = MAIN_PX;
-        let ANIMATION_SPEED = 0.1; // Now dynamic, updated by slider
+        let ANIMATION_SPEED = 0.1;
 
         const DEFAULT_PALETTE = {
             '1': [245, 245, 220, 1],
@@ -353,6 +354,16 @@
                         { class: 'tile-cover', width: diameter, top: 0, left: 0, blink: 'blink', speed: 3, delay: 1 },
                         { class: 'tile-back', width: diameter, top: 0, left: 0, blink: 'blink', speed: 5, delay: 2 },
                     ];
+                } else if (this.mode === 'DotToShape') {
+                    for (let i = 0; i < this.elements; i++) {
+                        this.elementsData.push({
+                            r: Math.random(),
+                            theta: (Math.random() * angle - angle / 2) * Math.PI / 180,
+                            colorIdx: Math.floor(Math.random() * this.palette.length),
+                            size_dot: Math.random() * 6 + 2,
+                            size_sq: Math.random() * 15 + 5
+                        });
+                    }
                 }
             }
 
@@ -519,16 +530,13 @@
                     ctx.moveTo(cx, cy);
                     ctx.lineTo(cx, cy - s.size);
                     ctx.stroke();
-
                     this._drawShape(cx, cy - s.size, -Math.PI / 2 + rotationOffset, s.size, ctx, points, t);
-
                     for (let i = 0; i < s.iterations; i++) {
                         for (let j = points.length - 1; j >= 0; j--) {
                             const point = points.pop();
                             this._drawShape(point.x, point.y, point.angle, point.size, ctx, points, t);
                         }
                     }
-
                     const mask = document.createElement('canvas');
                     mask.width = this.size;
                     mask.height = this.size;
@@ -540,7 +548,6 @@
                     maskCtx.arc(cx, cy, radius, -Math.PI / 2 - sector_angle / 2, -Math.PI / 2 + sector_angle / 2);
                     maskCtx.closePath();
                     maskCtx.fill();
-
                     const tempCanvas = document.createElement('canvas');
                     tempCanvas.width = this.size;
                     tempCanvas.height = this.size;
@@ -593,6 +600,36 @@
                         ctx.beginPath();
                         ctx.arc(x + width / 2, y + height / 2, width / 2, 0, 2 * Math.PI);
                         ctx.stroke();
+                    }
+                } else if (this.mode === 'DotToShape') {
+                    for (let i = 0; i < this.elementsData.length; i++) {
+                        const data = this.elementsData[i];
+                        const color = this.palette[data.colorIdx];
+                        const nextColor = this.palette[(data.colorIdx + 1) % this.palette.length];
+                        const colorFactor = (Math.sin(t + i * 0.3) + 1) / 2;
+                        ctx.fillStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
+                        const thetaOffset = Math.sin(t + i * 0.3) * 0.4;
+                        const x = cx + data.r * radius * Math.cos(data.theta + thetaOffset);
+                        const y = cy + data.r * radius * Math.sin(data.theta + thetaOffset);
+                        const size_dot = data.size_dot * (1 + Math.sin(t + i * 0.3) * 0.8);
+                        const size_sq = data.size_sq * (1 + Math.sin(t + i * 0.3) * 0.8);
+                        const shapeFactor = (Math.sin(t * 2) + 1) / 2; // Controls transition from dot to square
+                        const size = size_dot * (1 - shapeFactor) + size_sq * shapeFactor;
+
+                        // Draw a rounded rectangle to transition from circle to square
+                        const cornerRadius = size * (1 - shapeFactor); // Circle when shapeFactor=0, square when shapeFactor=1
+                        ctx.beginPath();
+                        ctx.moveTo(x - size + cornerRadius, y - size);
+                        ctx.lineTo(x + size - cornerRadius, y - size);
+                        ctx.arcTo(x + size, y - size, x + size, y - size + cornerRadius, cornerRadius);
+                        ctx.lineTo(x + size, y + size - cornerRadius);
+                        ctx.arcTo(x + size, y + size, x + size - cornerRadius, y + size, cornerRadius);
+                        ctx.lineTo(x - size + cornerRadius, y + size);
+                        ctx.arcTo(x - size, y + size, x - size, y + size - cornerRadius, cornerRadius);
+                        ctx.lineTo(x - size, y - size + cornerRadius);
+                        ctx.arcTo(x - size, y - size, x - size + cornerRadius, y - size, cornerRadius);
+                        ctx.closePath();
+                        ctx.fill();
                     }
                 }
 
@@ -804,7 +841,8 @@
                 'Смешанный': 'Mixed',
                 'Ветви': 'Branches',
                 'Спираль': 'Spiral',
-                'Орбиты': 'Orbit'
+                'Орбиты': 'Orbit',
+                'Точки в Фигуры': 'DotToShape'
             };
             const mode = modeMap[document.getElementById('modeCombo').value];
             const elements = parseInt(document.getElementById('elementSlider').value);
@@ -883,7 +921,8 @@
                 document.getElementById('modeCombo').value === 'Фигуры' ? 'Shapes' :
                 document.getElementById('modeCombo').value === 'Смешанный' ? 'Mixed' :
                 document.getElementById('modeCombo').value === 'Ветви' ? 'Branches' :
-                document.getElementById('modeCombo').value === 'Спираль' ? 'Spiral' : 'Orbit',
+                document.getElementById('modeCombo').value === 'Спираль' ? 'Spiral' :
+                document.getElementById('modeCombo').value === 'Орбиты' ? 'Orbit' : 'DotToShape',
                 12,
                 parseInt(document.getElementById('elementSlider').value),
                 parseInt(document.getElementById('slicesSlider').value)
@@ -937,7 +976,8 @@
                 document.getElementById('modeCombo').value === 'Фигуры' ? 'Shapes' :
                 document.getElementById('modeCombo').value === 'Смешанный' ? 'Mixed' :
                 document.getElementById('modeCombo').value === 'Ветви' ? 'Branches' :
-                document.getElementById('modeCombo').value === 'Спираль' ? 'Spiral' : 'Orbit',
+                document.getElementById('modeCombo').value === 'Спираль' ? 'Spiral' :
+                document.getElementById('modeCombo').value === 'Орбиты' ? 'Orbit' : 'DotToShape',
                 12,
                 parseInt(document.getElementById('elementSlider').value),
                 parseInt(document.getElementById('slicesSlider').value)

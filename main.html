@@ -118,12 +118,12 @@
             <summary>Инструкции</summary>
             <p>Добро пожаловать в Генератор калейдоскопов! Следуйте этим шагам:</p>
             <ul class="list-disc pl-5 mt-2">
-                <li><strong>Выбор узора:</strong> Выберите тип узора (Линии, Точки, Фигуры, Смешанный, Ветви, Спираль, Орбиты, Точки в Фигуры).</li>
+                <li><strong>Выбор узора:</strong> Выберите тип узора (Линии, Точки, Фигуры, Смешанный, Спираль, Орбиты, Точки в Фигуры, Точки в Смешанный).</li>
                 <li><strong>Настройка параметров:</strong> Регулируйте количество элементов (100–1000), секторов (3–40) и скорость анимации (0.05–0.5).</li>
                 <li><strong>Палитра:</strong> Добавляйте до 20 цветов, удаляйте или изменяйте их.</li>
                 <li><strong>Генерация:</strong> Нажмите "Сгенерировать" для создания узора.</li>
                 <li><strong>Анимация:</strong> Нажмите "Анимировать" для запуска плавной анимации. Повторное нажатие останавливает.</li>
-                <li><strong>Запись видео:</strong> Нажмите "Старт/Стоп запись" для записи анимации. Нажмите "Скачать видео" для сохранения в MP4.</li>
+                <li><strong>Запись видео:</strong> Нажмите "Старт/Стоп запись" для записи анимации. Нажмите "Скачать видео" для сохранения в WebM.</li>
                 <li><strong>Просмотр:</strong> Нажмите "Открыть полное изображение" для просмотра анимированного узора.</li>
                 <li><strong>Сохранение:</strong> Нажмите "Сохранить изображение" для скачивания PNG (статичное изображение).</li>
                 <li><strong>Возврат:</strong> Нажмите "← Вернуться" для возврата на главную.</li>
@@ -143,10 +143,10 @@
                                 <option>Точки</option>
                                 <option>Фигуры</option>
                                 <option>Смешанный</option>
-                                <!-- <option>Ветви</option> -->
                                 <option>Спираль</option>
                                 <option>Орбиты</option>
                                 <option>Точки в Фигуры</option>
+                                <option>Точки в Смешанный</option>
                             </select>
                         </div>
                         <div>
@@ -321,14 +321,6 @@
                             });
                         }
                     }
-                } else if (this.mode === 'Branches') {
-                    this.elementsData.push({
-                        x: 0.5,
-                        y: 0.5,
-                        angle: -Math.PI * 0.5,
-                        size: this.branch_settings.size / this.size,
-                        colorIdx: Math.floor(Math.random() * this.palette.length)
-                    });
                 } else if (this.mode === 'Spiral') {
                     const spiral_count = Math.floor(this.elements / 10);
                     for (let i = 0; i < spiral_count; i++) {
@@ -365,6 +357,23 @@
                             colorIdx: Math.floor(Math.random() * this.palette.length),
                             size_dot: Math.random() * 6 + 2,
                             size_sq: Math.random() * 15 + 5
+                        });
+                    }
+                } else if (this.mode === 'DotsToMixed') {
+                    for (let i = 0; i < this.elements; i++) {
+                        const type = ['Lines', 'Dots', 'Shapes'][Math.floor(Math.random() * 3)];
+                        this.elementsData.push({
+                            r: Math.random(),
+                            theta: (Math.random() * angle - angle / 2) * Math.PI / 180,
+                            colorIdx: Math.floor(Math.random() * this.palette.length),
+                            size_dot: Math.random() * 6 + 2,
+                            type: type,
+                            r1: type === 'Lines' ? Math.random() : null,
+                            theta1: type === 'Lines' ? (Math.random() * angle - angle / 2) * Math.PI / 180 : null,
+                            r2: type === 'Lines' ? Math.random() : null,
+                            theta2: type === 'Lines' ? (Math.random() * angle - angle / 2) * Math.PI / 180 : null,
+                            lineWidth: type === 'Lines' ? Math.floor(Math.random() * 4) + 1 : null,
+                            size_sq: type === 'Shapes' ? Math.random() * 15 + 5 : null
                         });
                     }
                 }
@@ -520,46 +529,6 @@
                             ctx.fillRect(x - size_sq, y - size_sq, size_sq * 2, size_sq * 2);
                         }
                     }
-                } else if (this.mode === 'Branches') {
-                    const s = this.branch_settings;
-                    s.size = Math.min(this.size * 0.3, 150);
-                    const points = [];
-                    const color = this.palette[this.elementsData[0].colorIdx];
-                    const nextColor = this.palette[(this.elementsData[0].colorIdx + 1) % this.palette.length];
-                    const colorFactor = (Math.sin(t) + 1) / 2;
-                    ctx.strokeStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
-                    ctx.lineWidth = 2 * (1 + Math.sin(t) * 0.8);
-                    ctx.beginPath();
-                    ctx.moveTo(cx, cy);
-                    ctx.lineTo(cx, cy - s.size);
-                    ctx.stroke();
-                    this._drawShape(cx, cy - s.size, -Math.PI / 2 + rotationOffset, s.size, ctx, points, t);
-                    for (let i = 0; i < s.iterations; i++) {
-                        for (let j = points.length - 1; j >= 0; j--) {
-                            const point = points.pop();
-                            this._drawShape(point.x, point.y, point.angle, point.size, ctx, points, t);
-                        }
-                    }
-                    const mask = document.createElement('canvas');
-                    mask.width = this.size;
-                    mask.height = this.size;
-                    const maskCtx = mask.getContext('2d');
-                    maskCtx.fillStyle = 'white';
-                    maskCtx.beginPath();
-                    maskCtx.moveTo(cx, cy);
-                    const sector_angle = (2 * Math.PI) / this.sectors;
-                    maskCtx.arc(cx, cy, radius, -Math.PI / 2 - sector_angle / 2, -Math.PI / 2 + sector_angle / 2);
-                    maskCtx.closePath();
-                    maskCtx.fill();
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = this.size;
-                    tempCanvas.height = this.size;
-                    const tempCtx = tempCanvas.getContext('2d');
-                    tempCtx.drawImage(canvas, 0, 0);
-                    tempCtx.globalCompositeOperation = 'destination-in';
-                    tempCtx.drawImage(mask, 0, 0);
-                    ctx.clearRect(0, 0, this.size, this.size);
-                    ctx.drawImage(tempCanvas, 0, 0);
                 } else if (this.mode === 'Spiral') {
                     const s = this.branch_settings;
                     for (let i = 0; i < this.elementsData.length; i++) {
@@ -631,6 +600,45 @@
                         ctx.arcTo(x - size, y - size, x - size + cornerRadius, y - size, cornerRadius);
                         ctx.closePath();
                         ctx.fill();
+                    }
+                } else if (this.mode === 'DotsToMixed') {
+                    for (let i = 0; i < this.elementsData.length; i++) {
+                        const data = this.elementsData[i];
+                        const color = this.palette[data.colorIdx];
+                        const nextColor = this.palette[(data.colorIdx + 1) % this.palette.length];
+                        const colorFactor = (Math.sin(t + i * 0.3) + 1) / 2;
+                        ctx.fillStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
+                        ctx.strokeStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
+                        const thetaOffset = Math.sin(t + i * 0.3) * 0.4;
+                        const x = cx + data.r * radius * Math.cos(data.theta + thetaOffset);
+                        const y = cy + data.r * radius * Math.sin(data.theta + thetaOffset);
+                        const shapeFactor = (Math.sin(t * 2) + 1) / 2;
+                        if (shapeFactor < 0.5) {
+                            const size_dot = data.size_dot * (1 + Math.sin(t + i * 0.3) * 0.8);
+                            ctx.beginPath();
+                            ctx.arc(x, y, size_dot * (1 - shapeFactor * 2), 0, 2 * Math.PI);
+                            ctx.fill();
+                        } else {
+                            if (data.type === 'Lines') {
+                                const x1 = cx + data.r1 * radius * Math.cos(data.theta1 + thetaOffset);
+                                const y1 = cy + data.r1 * radius * Math.sin(data.theta1 + thetaOffset);
+                                const x2 = cx + data.r2 * radius * Math.cos(data.theta2 + thetaOffset);
+                                const y2 = cy + data.r2 * radius * Math.sin(data.theta2 + thetaOffset);
+                                ctx.lineWidth = data.lineWidth * (1 + Math.sin(t + i * 0.3) * 0.8) * (shapeFactor * 2 - 1);
+                                ctx.beginPath();
+                                ctx.moveTo(x1, y1);
+                                ctx.lineTo(x2, y2);
+                                ctx.stroke();
+                            } else if (data.type === 'Dots') {
+                                const size_dot = data.size_dot * (1 + Math.sin(t + i * 0.3) * 0.8) * (shapeFactor * 2 - 1);
+                                ctx.beginPath();
+                                ctx.arc(x, y, size_dot, 0, 2 * Math.PI);
+                                ctx.fill();
+                            } else {
+                                const size_sq = data.size_sq * (1 + Math.sin(t + i * 0.3) * 0.8) * (shapeFactor * 2 - 1);
+                                ctx.fillRect(x - size_sq, y - size_sq, size_sq * 2, size_sq * 2);
+                            }
+                        }
                     }
                 }
 
@@ -844,10 +852,10 @@
                 'Точки': 'Dots',
                 'Фигуры': 'Shapes',
                 'Смешанный': 'Mixed',
-                'Ветви': 'Branches',
                 'Спираль': 'Spiral',
                 'Орбиты': 'Orbit',
-                'Точки в Фигуры': 'DotToShape'
+                'Точки в Фигуры': 'DotToShape',
+                'Точки в Смешанный': 'DotsToMixed'
             };
             const mode = modeMap[document.getElementById('modeCombo').value];
             const elements = parseInt(document.getElementById('elementSlider').value);
@@ -925,9 +933,10 @@
                 document.getElementById('modeCombo').value === 'Точки' ? 'Dots' :
                 document.getElementById('modeCombo').value === 'Фигуры' ? 'Shapes' :
                 document.getElementById('modeCombo').value === 'Смешанный' ? 'Mixed' :
-                document.getElementById('modeCombo').value === 'Ветви' ? 'Branches' :
                 document.getElementById('modeCombo').value === 'Спираль' ? 'Spiral' :
-                document.getElementById('modeCombo').value === 'Орбиты' ? 'Orbit' : 'DotToShape',
+                document.getElementById('modeCombo').value === 'Орбиты' ? 'Orbit' :
+                document.getElementById('modeCombo').value === 'Точки в Фигуры' ? 'DotToShape' :
+                'DotsToMixed',
                 12,
                 parseInt(document.getElementById('elementSlider').value),
                 parseInt(document.getElementById('slicesSlider').value)
@@ -980,9 +989,10 @@
                 document.getElementById('modeCombo').value === 'Точки' ? 'Dots' :
                 document.getElementById('modeCombo').value === 'Фигуры' ? 'Shapes' :
                 document.getElementById('modeCombo').value === 'Смешанный' ? 'Mixed' :
-                document.getElementById('modeCombo').value === 'Ветви' ? 'Branches' :
                 document.getElementById('modeCombo').value === 'Спираль' ? 'Spiral' :
-                document.getElementById('modeCombo').value === 'Орбиты' ? 'Orbit' : 'DotToShape',
+                document.getElementById('modeCombo').value === 'Орбиты' ? 'Orbit' :
+                document.getElementById('modeCombo').value === 'Точки в Фигуры' ? 'DotToShape' :
+                'DotsToMixed',
                 12,
                 parseInt(document.getElementById('elementSlider').value),
                 parseInt(document.getElementById('slicesSlider').value)
@@ -1011,10 +1021,10 @@
                 }
                 recordedChunks = [];
                 const canvas = document.getElementById('previewCanvas');
-                const stream = canvas.captureStream(60); // 60 FPS for smooth video
+                const stream = canvas.captureStream(60);
                 mediaRecorder = new MediaRecorder(stream, {
                     mimeType: 'video/webm;codecs=vp9',
-                    videoBitsPerSecond: 500000000 // High bitrate for quality
+                    videoBitsPerSecond: 500000000
                 });
                 mediaRecorder.ondataavailable = (event) => {
                     if (event.data.size > 0) {

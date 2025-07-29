@@ -88,16 +88,16 @@
             margin-top: 0.5rem;
             color: #374151;
         }
-        #animateBtn {
+        #animateBtn, #recordBtn {
             background: linear-gradient(45deg, #7c3aed, #4c1d95);
             color: white;
             transition: transform 0.3s, background 0.3s;
         }
-        #animateBtn:hover {
+        #animateBtn:hover, #recordBtn:hover {
             transform: scale(1.05);
             background: linear-gradient(45deg, #9f67ff, #6b46c1);
         }
-        #animateBtn.active {
+        #animateBtn.active, #recordBtn.active {
             background: linear-gradient(45deg, #e74c3c, #c0392b);
         }
         .action-buttons {
@@ -123,6 +123,7 @@
                 <li><strong>Палитра:</strong> Добавляйте до 20 цветов, удаляйте или изменяйте их.</li>
                 <li><strong>Генерация:</strong> Нажмите "Сгенерировать" для создания узора.</li>
                 <li><strong>Анимация:</strong> Нажмите "Анимировать" для запуска плавной анимации. Повторное нажатие останавливает.</li>
+                <li><strong>Запись видео:</strong> Нажмите "Старт/Стоп запись" для записи анимации. Нажмите "Скачать видео" для сохранения в MP4.</li>
                 <li><strong>Просмотр:</strong> Нажмите "Открыть полное изображение" для просмотра анимированного узора.</li>
                 <li><strong>Сохранение:</strong> Нажмите "Сохранить изображение" для скачивания PNG (статичное изображение).</li>
                 <li><strong>Возврат:</strong> Нажмите "← Вернуться" для возврата на главную.</li>
@@ -142,7 +143,7 @@
                                 <option>Точки</option>
                                 <option>Фигуры</option>
                                 <option>Смешанный</option>
-<!--                                 <option>Ветви</option> -->
+                                <!-- <option>Ветви</option> -->
                                 <option>Спираль</option>
                                 <option>Орбиты</option>
                                 <option>Точки в Фигуры</option>
@@ -193,6 +194,8 @@
                     <div class="action-buttons">
                         <button id="generateBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Создать узор">Сгенерировать</button>
                         <button id="animateBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Запустить/остановить анимацию">Анимировать</button>
+                        <button id="recordBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Начать/остановить запись видео">Старт запись</button>
+                        <button id="downloadVideoBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Скачать записанное видео" disabled>Скачать видео</button>
                         <button id="viewBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Открыть узор">Открыть полное изображение</button>
                         <button id="saveBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Сохранить узор">Сохранить изображение</button>
                     </div>
@@ -613,11 +616,9 @@
                         const y = cy + data.r * radius * Math.sin(data.theta + thetaOffset);
                         const size_dot = data.size_dot * (1 + Math.sin(t + i * 0.3) * 0.8);
                         const size_sq = data.size_sq * (1 + Math.sin(t + i * 0.3) * 0.8);
-                        const shapeFactor = (Math.sin(t * 2) + 1) / 2; // Controls transition from dot to square
+                        const shapeFactor = (Math.sin(t * 2) + 1) / 2;
                         const size = size_dot * (1 - shapeFactor) + size_sq * shapeFactor;
-
-                        // Draw a rounded rectangle to transition from circle to square
-                        const cornerRadius = size * (1 - shapeFactor); // Circle when shapeFactor=0, square when shapeFactor=1
+                        const cornerRadius = size * (1 - shapeFactor);
                         ctx.beginPath();
                         ctx.moveTo(x - size + cornerRadius, y - size);
                         ctx.lineTo(x + size - cornerRadius, y - size);
@@ -684,11 +685,14 @@
         let currentImage = null;
         let isAnimating = false;
         let isFullAnimating = false;
+        let isRecording = false;
         let animationFrameId = null;
         let fullAnimationFrameId = null;
         let startTime = null;
         let fullStartTime = null;
         let generator = null;
+        let mediaRecorder = null;
+        let recordedChunks = [];
 
         function loadPalette() {
             const generatedColors = localStorage.getItem('generatedColors');
@@ -834,6 +838,7 @@
         function generate() {
             stopAnimation();
             stopFullAnimation();
+            stopRecording();
             const modeMap = {
                 'Линии': 'Lines',
                 'Точки': 'Dots',
@@ -989,16 +994,75 @@
             link.click();
         }
 
+        function startStopRecording() {
+            if (!currentImage || !generator) {
+                alert('Сначала сгенерируйте узор!');
+                return;
+            }
+            const recordBtn = document.getElementById('recordBtn');
+            const downloadVideoBtn = document.getElementById('downloadVideoBtn');
+            if (!isRecording) {
+                if (!isAnimating) {
+                    isAnimating = true;
+                    startTime = Date.now();
+                    requestAnimationFrame(animateLoop);
+                    document.getElementById('animateBtn').textContent = 'Остановить';
+                    document.getElementById('animateBtn').classList.add('active');
+                }
+                recordedChunks = [];
+                const canvas = document.getElementById('previewCanvas');
+                const stream = canvas.captureStream(60); // 60 FPS for smooth video
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'video/webm;codecs=vp9',
+                    videoBitsPerSecond: 500000000 // High bitrate for quality
+                });
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+                mediaRecorder.onstop = () => {
+                    downloadVideoBtn.disabled = false;
+                };
+                mediaRecorder.start();
+                isRecording = true;
+                recordBtn.textContent = 'Стоп запись';
+                recordBtn.classList.add('active');
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordBtn.textContent = 'Старт запись';
+                recordBtn.classList.remove('active');
+            }
+        }
+
+        function downloadVideo() {
+            if (recordedChunks.length === 0) {
+                alert('Нет записанного видео для скачивания!');
+                return;
+            }
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'калейдоскоп.webm';
+            link.click();
+            URL.revokeObjectURL(url);
+            document.getElementById('downloadVideoBtn').disabled = true;
+        }
+
         document.getElementById('elementSlider').addEventListener('input', (e) => {
             document.getElementById('elementValue').textContent = e.target.value;
             stopAnimation();
             stopFullAnimation();
+            stopRecording();
         });
 
         document.getElementById('slicesSlider').addEventListener('input', (e) => {
             document.getElementById('slicesValue').textContent = e.target.value;
             stopAnimation();
             stopFullAnimation();
+            stopRecording();
         });
 
         document.getElementById('animationSpeedSlider').addEventListener('input', (e) => {
@@ -1009,22 +1073,27 @@
         document.getElementById('modeCombo').addEventListener('change', () => {
             stopAnimation();
             stopFullAnimation();
+            stopRecording();
         });
 
         document.getElementById('addColorBtn').addEventListener('click', () => {
             addColor();
             stopAnimation();
             stopFullAnimation();
+            stopRecording();
         });
 
         document.getElementById('removeColorBtn').addEventListener('click', () => {
             removeColor();
             stopAnimation();
             stopFullAnimation();
+            stopRecording();
         });
 
         document.getElementById('generateBtn').addEventListener('click', generate);
         document.getElementById('animateBtn').addEventListener('click', animate);
+        document.getElementById('recordBtn').addEventListener('click', startStopRecording);
+        document.getElementById('downloadVideoBtn').addEventListener('click', downloadVideo);
         document.getElementById('viewBtn').addEventListener('click', openFullImage);
         document.getElementById('saveBtn').addEventListener('click', save);
         document.getElementById('closeModalBtn').addEventListener('click', () => {
@@ -1035,8 +1104,19 @@
         document.getElementById('home').addEventListener('click', () => {
             stopAnimation();
             stopFullAnimation();
+            stopRecording();
             window.location.href = 'index.html';
         });
+
+        function stopRecording() {
+            if (isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                document.getElementById('recordBtn').textContent = 'Старт запись';
+                document.getElementById('recordBtn').classList.remove('active');
+                document.getElementById('downloadVideoBtn').disabled = recordedChunks.length === 0;
+            }
+        }
 
         updatePaletteTable();
     </script>

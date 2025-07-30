@@ -110,6 +110,11 @@
             padding: 0.75rem;
             font-size: 0.9rem;
         }
+        #recordTimer {
+            color: #374151;
+            font-weight: 600;
+            margin-left: 1rem;
+        }
     </style>
 </head>
 <body class="font-sans text-gray-900">
@@ -123,7 +128,7 @@
                 <li><strong>Палитра:</strong> Добавляйте до 20 цветов, удаляйте или изменяйте их.</li>
                 <li><strong>Генерация:</strong> Нажмите "Сгенерировать" для создания узора.</li>
                 <li><strong>Анимация:</strong> Нажмите "Анимировать" для запуска плавной анимации. Повторное нажатие останавливает.</li>
-                <li><strong>Запись видео:</strong> Нажмите "Старт/Стоп запись" для записи анимации. Нажмите "Скачать видео" для сохранения в WebM.</li>
+                <li><strong>Запись видео:</strong> Нажмите "Старт/Стоп запись" для записи анимации (макс. 60 сек). Таймер показывает длительность записи. Нажмите "Скачать видео" для сохранения в MP4 (или WebM, если MP4 не поддерживается).</li>
                 <li><strong>Просмотр:</strong> Нажмите "Открыть полное изображение" для просмотра анимированного узора.</li>
                 <li><strong>Сохранение:</strong> Нажмите "Сохранить изображение" для скачивания PNG (статичное изображение).</li>
                 <li><strong>Возврат:</strong> Нажмите "← Вернуться" для возврата на главную.</li>
@@ -195,6 +200,7 @@
                         <button id="generateBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Создать узор">Сгенерировать</button>
                         <button id="animateBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Запустить/остановить анимацию">Анимировать</button>
                         <button id="recordBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Начать/остановить запись видео">Старт запись</button>
+                        <span id="recordTimer" class="self-center">Запись: 00:00</span>
                         <button id="downloadVideoBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Скачать записанное видео" disabled>Скачать видео</button>
                         <button id="viewBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Открыть узор">Открыть полное изображение</button>
                         <button id="saveBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Сохранить узор">Сохранить изображение</button>
@@ -219,6 +225,8 @@
         const MAIN_CM = 15;
         const MAIN_PX = Math.round(MAIN_CM * CM_TO_INCH * DPI);
         const CANVAS_PX = MAIN_PX;
+        const MOBILE_RECORDING_PX = 1280; // Increased for better quality
+        const MAX_RECORDING_DURATION = 60; // Max recording time in seconds
         let ANIMATION_SPEED = 0.1;
 
         const DEFAULT_PALETTE = {
@@ -237,6 +245,9 @@
         ];
 
         let colorIndex = 0;
+
+        // Detect mobile devices
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         class KaleidoGenerator {
             constructor(size_px, palette, mode = 'Lines', sectors = 12, elements = 300, slices = 13) {
@@ -701,6 +712,8 @@
         let generator = null;
         let mediaRecorder = null;
         let recordedChunks = [];
+        let recordTimerId = null;
+        let recordStartTime = null;
 
         function loadPalette() {
             const generatedColors = localStorage.getItem('generatedColors');
@@ -843,6 +856,31 @@
             return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
         }
 
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const secs = (seconds % 60).toString().padStart(2, '0');
+            return `${mins}:${secs}`;
+        }
+
+        function updateRecordTimer() {
+            if (isRecording) {
+                const elapsed = Math.floor((Date.now() - recordStartTime) / 1000);
+                document.getElementById('recordTimer').textContent = `Запись: ${formatTime(elapsed)}`;
+                if (elapsed >= MAX_RECORDING_DURATION) {
+                    stopRecording();
+                    alert(`Максимальная длительность записи (${MAX_RECORDING_DURATION} секунд) достигнута.`);
+                }
+            }
+        }
+
+        function resetRecordTimer() {
+            document.getElementById('recordTimer').textContent = 'Запись: 00:00';
+            if (recordTimerId) {
+                clearInterval(recordTimerId);
+                recordTimerId = null;
+            }
+        }
+
         function generate() {
             stopAnimation();
             stopFullAnimation();
@@ -901,9 +939,12 @@
                 stopAnimation();
                 return;
             }
-            canvas.width = CANVAS_PX;
+            canvas.width = isRecording && isMobile ? MOBILE_RECORDING_PX : CANVAS_PX;
+            canvas.height = isRecording && isMobile ? MOBILE_RECORDING_PX : CANVAS_PX;
             const elapsedTime = (Date.now() - startTime) / 1000;
+            generator.size = isRecording && isMobile ? MOBILE_RECORDING_PX : CANVAS_PX;
             generator.generate(canvas, true, elapsedTime);
+            generator.size = CANVAS_PX; // Restore original size
             currentImage = canvas;
             animationFrameId = requestAnimationFrame(animateLoop);
         }
@@ -1011,7 +1052,13 @@
             }
             const recordBtn = document.getElementById('recordBtn');
             const downloadVideoBtn = document.getElementById('downloadVideoBtn');
+            const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.4D401E') ? 'video/mp4;codecs=avc1.4D401E' : 'video/webm;codecs=vp9';
+            const fileExtension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
             if (!isRecording) {
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    alert(`Формат ${fileExtension.toUpperCase()} не поддерживается вашим браузером. Попробуйте другой браузер, например Chrome.`);
+                    return;
+                }
                 if (!isAnimating) {
                     isAnimating = true;
                     startTime = Date.now();
@@ -1021,23 +1068,38 @@
                 }
                 recordedChunks = [];
                 const canvas = document.getElementById('previewCanvas');
-                const stream = canvas.captureStream(60);
-                mediaRecorder = new MediaRecorder(stream, {
-                    mimeType: 'video/webm;codecs=vp9',
-                    videoBitsPerSecond: 500000000
-                });
-                mediaRecorder.ondataavailable = (event) => {
-                    if (event.data.size > 0) {
-                        recordedChunks.push(event.data);
-                    }
-                };
-                mediaRecorder.onstop = () => {
-                    downloadVideoBtn.disabled = false;
-                };
-                mediaRecorder.start();
-                isRecording = true;
-                recordBtn.textContent = 'Стоп запись';
-                recordBtn.classList.add('active');
+                canvas.width = isMobile ? MOBILE_RECORDING_PX : CANVAS_PX;
+                canvas.height = isMobile ? MOBILE_RECORDING_PX : CANVAS_PX;
+                const stream = canvas.captureStream(isMobile ? 30 : 60);
+                try {
+                    mediaRecorder = new MediaRecorder(stream, {
+                        mimeType: mimeType,
+                        videoBitsPerSecond: isMobile ? 10000000 : 20000000 // 10 Mbps for mobile, 20 Mbps for desktop
+                    });
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            recordedChunks.push(event.data);
+                        }
+                    };
+                    mediaRecorder.onstop = () => {
+                        downloadVideoBtn.disabled = recordedChunks.length === 0;
+                        resetRecordTimer();
+                    };
+                    mediaRecorder.onerror = (event) => {
+                        console.error('MediaRecorder error:', event.error);
+                        alert('Ошибка при записи видео: ' + event.error.message);
+                        stopRecording();
+                    };
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordBtn.textContent = 'Стоп запись';
+                    recordBtn.classList.add('active');
+                    recordStartTime = Date.now();
+                    recordTimerId = setInterval(updateRecordTimer, 1000);
+                } catch (e) {
+                    console.error('Failed to start recording:', e);
+                    alert('Не удалось начать запись. Формат MP4 может быть неподдерживаемым. Попробуйте браузер Chrome.');
+                }
             } else {
                 mediaRecorder.stop();
                 isRecording = false;
@@ -1051,13 +1113,16 @@
                 alert('Нет записанного видео для скачивания!');
                 return;
             }
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.4D401E') ? 'video/mp4' : 'video/webm';
+            const fileExtension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
+            const blob = new Blob(recordedChunks, { type: mimeType });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = 'калейдоскоп.webm';
+            link.download = `калейдоскоп.${fileExtension}`;
             link.click();
             URL.revokeObjectURL(url);
+            recordedChunks = []; // Clear chunks to free memory
             document.getElementById('downloadVideoBtn').disabled = true;
         }
 
@@ -1125,6 +1190,7 @@
                 document.getElementById('recordBtn').textContent = 'Старт запись';
                 document.getElementById('recordBtn').classList.remove('active');
                 document.getElementById('downloadVideoBtn').disabled = recordedChunks.length === 0;
+                resetRecordTimer();
             }
         }
 

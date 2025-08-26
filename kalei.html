@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Калейдоскоп Генератор</title>
+    <title>Калейдоскоп Генератор 1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
@@ -50,11 +50,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-left: 380px;
+            margin-left: 380px; /* 320px panel + 30px margin-left + 30px margin-right */
         }
         #kaleidoscope-container {
             width: 100%;
-            max-width: 800px; /* Reduced max-width */
+            max-width: 1000px;
             aspect-ratio: 1/1;
             background-color: white;
             border: 3px solid #6ee7b7;
@@ -236,6 +236,7 @@
             <div class="input-group">
                 <input type="text" id="image-url" placeholder="Введите URL изображения" class="focus:ring-2 focus:ring-cyan-400">
                 <button onclick="addImageUrl()" title="Добавить URL" class="action-btn">
+                   
                     <p style="margin: 10px;">Добавить фото</p>
                 </button>
             </div>
@@ -282,12 +283,10 @@
         </div>
     </div>
     <script>
-        (function(){var a,b;b=function(){return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||function(a){return window.setTimeout(a,1e3/60)}}(),window.Graphemescope=a=function(){function a(a){var c=this;this.parentElement=null!=a?a:window.document.body,this.enabled=!0,this.radiusFactor=0.8,this.zoomFactor=1,this.angleFactor=0,this.zoomTarget=1.2,this.angleTarget=.8,this.easeEnabled=!0,this.ease=.15,null==this.domElement&&(this.domElement=document.createElement("canvas")),null==this.ctx&&(this.ctx=this.domElement.getContext("2d")),this.alphaFactor=1,this.alphaTarget=1,this.parentElement.appendChild(this.domElement),this.oldResizeHandler=function(){},null!==window.onresize&&(this.oldResizeHandler=window.onresize),window.onresize=function(){return c.resizeHandler()},this.resizeHandler(),b(function(){return c.animationFrame()})}return a.prototype.animationFrame=function(){var a=this;if(!this.enabled)return;b(function(){return a.animationFrame()}),this.update(),this.draw()},a.prototype.resizeHandler=function(){var scale=window.innerWidth<=768?0.6:0.8;this.width=this.domElement.width=this.parentElement.offsetWidth*scale,this.height=this.domElement.height=this.parentElement.offsetHeight*scale,this.radius=.5*this.radiusFactor*Math.min(this.width,this.height),this.radiusHeight=.5*Math.sqrt(3)*this.radius,this.oldResizeHandler()},a.prototype.update=function(){return this.easeEnabled?(this.angleFactor+=(this.angleTarget-this.angleFactor)*this.ease,this.zoomFactor+=(this.zoomTarget-this.zoomFactor)*this.ease,this.alphaFactor+=(this.alphaTarget-this.alphaFactor)*this.ease):(this.angleFactor=this.angleTarget,this.zoomFactor=this.zoomTarget,this.alphaFactor=this.alphaTarget)},a.prototype.drawImage=function(a){var b,c;return this.ctx.save(),b=2/3*this.radiusHeight,c=this.zoomFactor*b/(.5*Math.min(a.width,a.height)),this.ctx.translate(0,b),this.ctx.scale(c,c),this.ctx.rotate(2*this.angleFactor*Math.PI),this.ctx.translate(-.5*a.width,-.5*a.height),this.ctx.drawImage(a,0,0),this.ctx.restore()},a.prototype.drawCell=function(a){var b,c,d,e=Math.min(this.width,this.height)/3;for(d=[],b=c=0;3>c;b=++c)this.ctx.save(),this.ctx.rotate(2*b*Math.PI/6),this.ctx.scale([-1,1][b%2],1),this.ctx.beginPath(),this.ctx.moveTo(0,0),this.ctx.lineTo(-.5*e,1*this.radiusHeight),this.ctx.lineTo(.5*e,1*this.radiusHeight),this.ctx.closePath(),this.drawImage(a),d.push(this.ctx.restore());return d},a.prototype.drawLayer=function(a){var b,c,d,e,f,g,h,i,j,k,l,m,n=2;for(this.ctx.save(),this.ctx.translate(.5*this.width,.5*this.height),f=Math.ceil(.5*this.height/this.radiusHeight/n),c=Math.ceil(.5*this.width/(3*this.radius)/n),d=function(){l=[];for(var a=-c;c>=-c?c>=a:a>=c;c>=-c?a++:a--)l.push(a);return l}.apply(this),g=function(){m=[];for(var a=-f;f>=-f?f>=a:a>=f;f>=-f?a++:a--)m.push(a);return m}.apply(this),h=0,j=g.length;j>h;h++){for(e=g[h],this.ctx.save(),this.ctx.translate(0,this.radiusHeight*e),Math.abs(e)%2&&this.ctx.translate(1.5*this.radius,0),i=0,k=d.length;k>i;i++)b=d[i],this.ctx.save(),this.ctx.translate(3*b*this.radius,0),this.drawCell(a),this.ctx.restore();this.ctx.restore()}return this.ctx.restore()},a.prototype.draw=function(){if(this.ctx.clearRect(0,0,this.width,this.height),null!=this.imageProxy){this.ctx.fillStyle=this.patternProxy,this.ctx.globalAlpha=1-this.alphaFactor,this.drawLayer(this.imageProxy)}if(null!=this.image){this.ctx.fillStyle=this.pattern,this.ctx.globalAlpha=this.alphaFactor,this.drawLayer(this.image)}},a.prototype.setImageDirect=function(a){return null!=this.image&&(this.imageProxy=this.image,this.patternProxy=this.pattern),this.image=a,this.pattern=this.ctx.createPattern(this.image,"repeat"),this.alphaFactor=0},a.prototype.setImage=function(a){var b,c=this;return"string"==typeof a?(b=new Image,b.src=a,b.onload=function(){return c.setImageDirect(b)}):this.setImageDirect(a)},a}()}).call(this);
+        (function(){var a,b;b=function(){return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||function(a){return window.setTimeout(a,1e3/30)}}(),window.Graphemescope=a=function(){function a(a){var c=this;this.parentElement=null!=a?a:window.document.body,this.enabled=!0,this.radiusFactor=1,this.zoomFactor=1,this.angleFactor=0,this.zoomTarget=1.2,this.angleTarget=.8,this.easeEnabled=!0,this.ease=.1,null==this.domElement&&(this.domElement=document.createElement("canvas")),null==this.ctx&&(this.ctx=this.domElement.getContext("2d")),this.alphaFactor=1,this.alphaTarget=1,this.parentElement.appendChild(this.domElement),this.oldResizeHandler=function(){},null!==window.onresize&&(this.oldResizeHandler=window.onresize),window.onresize=function(){return c.resizeHandler()},this.resizeHandler(),b(function(){return c.animationFrame()})}return a.prototype.animationFrame=function(){var a=this;return b(function(){return a.animationFrame()}),this.enabled?(this.update(),this.draw()):void 0},a.prototype.resizeHandler=function(){return this.width=this.domElement.width=this.parentElement.offsetWidth,this.height=this.domElement.height=this.parentElement.offsetHeight,this.radius=.5*this.radiusFactor*Math.min(this.width,this.height),this.radiusHeight=.5*Math.sqrt(3)*this.radius,this.oldResizeHandler()},a.prototype.update=function(){return this.easeEnabled?(this.angleFactor+=(this.angleTarget-this.angleFactor)*this.ease,this.zoomFactor+=(this.zoomTarget-this.zoomFactor)*this.ease,this.alphaFactor+=(this.alphaTarget-this.alphaFactor)*this.ease):(this.angleFactor=this.angleTarget,this.zoomFactor=this.zoomTarget,this.alphaFactor=this.alphaTarget)},a.prototype.drawImage=function(a){var b,c;return this.ctx.save(),b=2/3*this.radiusHeight,c=this.zoomFactor*b/(.5*Math.min(a.width,a.height)),this.ctx.translate(0,b),this.ctx.scale(c,c),this.ctx.rotate(2*this.angleFactor*Math.PI),this.ctx.translate(-.5*a.width,-.5*a.height),this.ctx.fill(),this.ctx.restore()},a.prototype.drawCell=function(a){var b,c,d;for(d=[],b=c=0;6>c;b=++c)this.ctx.save(),this.ctx.rotate(2*b*Math.PI/6),this.ctx.scale([-1,1][b%2],1),this.ctx.beginPath(),this.ctx.moveTo(0,0),this.ctx.lineTo(-.5*this.radius,1*this.radiusHeight),this.ctx.lineTo(.5*this.radius,1*this.radiusHeight),this.ctx.closePath(),this.drawImage(a),d.push(this.ctx.restore());return d},a.prototype.drawLayer=function(a){var b,c,d,e,f,g,h,i,j,k,l,m;for(this.ctx.save(),this.ctx.translate(.5*this.width,.5*this.height),f=Math.ceil(.5*this.height/this.radiusHeight),c=Math.ceil(.5*this.width/(3*this.radius)),d=function(){l=[];for(var a=-c;c>=-c?c>=a:a>=c;c>=-c?a++:a--)l.push(a);return l}.apply(this),g=function(){m=[];for(var a=-f;f>=-f?f>=a:a>=f;f>=-f?a++:a--)m.push(a);return m}.apply(this),h=0,j=g.length;j>h;h++){for(e=g[h],this.ctx.save(),this.ctx.translate(0,this.radiusHeight*e),Math.abs(e)%2&&this.ctx.translate(1.5*this.radius,0),i=0,k=d.length;k>i;i++)b=d[i],this.ctx.save(),this.ctx.translate(3*b*this.radius,0),this.drawCell(a),this.ctx.restore();this.ctx.restore()}return this.ctx.restore()},a.prototype.draw=function(){return null!=this.imageProxy&&(this.ctx.fillStyle=this.patternProxy,this.ctx.globalAlpha=1-this.alphaFactor,this.drawLayer(this.imageProxy)),null!=this.image?(this.ctx.fillStyle=this.pattern,this.ctx.globalAlpha=this.alphaFactor,this.drawLayer(this.image)):void 0},a.prototype.setImageDirect=function(a){return null!=this.image&&(this.imageProxy=this.image,this.patternProxy=this.pattern),this.image=a,this.pattern=this.ctx.createPattern(this.image,"repeat"),this.alphaFactor=0},a.prototype.setImage=function(a){var b,c=this;return"string"==typeof a?(b=new Image,b.src=a,b.onload=function(){return c.setImageDirect(b)}):this.setImageDirect(a)},a}()}).call(this);
 
         // Initialize kaleidoscope
         const container = $("#kaleidoscope-container");
-        const isMobile = window.innerWidth <= 768;
-        const RECORDING_PX = isMobile ? 480 : 720; // Lower resolution
         const scope = new Graphemescope(container[0]);
         let images = [];
         let index = 0;
@@ -300,12 +299,29 @@
         let recordedChunks = [];
         let recordTimerId = null;
         let recordStartTime = null;
-        const MAX_RECORDING_DURATION = 30; // Shorter duration to reduce load
+        const MAX_RECORDING_DURATION = 60;
+        let RECORDING_PX = 720; // Reduced from 1280 for better performance on weak devices
+        let RECORDING_FPS = 15; // Reduced FPS for recording
+        let RECORDING_BITRATE = 2500000; // Reduced bitrate
+        let ANIMATION_STEP = 0.01; // Slightly reduced for smoother but less intensive animation
+        let MAX_IMAGE_SIZE = 1024; // Max dimension for resizing images
+        let lastMoveTime = 0;
+        let MOVE_THROTTLE = 50; // Throttle move events to 50ms
+        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+        if (isMobile) {
+            scope.radiusFactor = 0.8; // Reduce complexity on mobile
+            RECORDING_PX = 480; // Even lower for mobile
+            RECORDING_FPS = 10;
+            RECORDING_BITRATE = 1000000;
+            ANIMATION_STEP = 0.005;
+            MOVE_THROTTLE = 100; // More throttling on mobile
+        }
 
         // Go back to main.html
         function goBack() {
             window.location.href = 'main.html';
-            if (isMobile) toggleMenu();
+            if (window.innerWidth <= 768) toggleMenu();
         }
 
         // Toggle menu for mobile
@@ -313,42 +329,43 @@
             $('.left-panel').toggleClass('hidden');
         }
 
-        // Resize image to reduce memory usage
-        function resizeImage(src, maxSize, callback) {
+        // Resize image to optimize performance
+        function resizeImage(src, callback) {
             const img = new Image();
+            img.src = src;
             img.onload = function() {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                let { width, height } = img;
+                let width = img.width;
+                let height = img.height;
                 if (width > height) {
-                    if (width > maxSize) {
-                        height = height * (maxSize / width);
-                        width = maxSize;
+                    if (width > MAX_IMAGE_SIZE) {
+                        height *= MAX_IMAGE_SIZE / width;
+                        width = MAX_IMAGE_SIZE;
                     }
                 } else {
-                    if (height > maxSize) {
-                        width = width * (maxSize / height);
-                        height = maxSize;
+                    if (height > MAX_IMAGE_SIZE) {
+                        width *= MAX_IMAGE_SIZE / height;
+                        height = MAX_IMAGE_SIZE;
                     }
                 }
                 canvas.width = width;
                 canvas.height = height;
                 ctx.drawImage(img, 0, 0, width, height);
-                callback(canvas.toDataURL('image/jpeg', 0.7));
+                callback(canvas.toDataURL('image/jpeg', 0.8)); // Compress to JPEG 80%
             };
-            img.src = src;
         }
 
         // Add image URL
         function addImageUrl() {
             const url = $("#image-url").val().trim();
             if (url) {
-                resizeImage(url, isMobile ? 512 : 1024, function(resizedUrl) {
+                resizeImage(url, (resizedUrl) => {
                     images.push(resizedUrl);
                     updateImageList();
                     if (images.length === 1) changePicture();
                     $("#image-url").val("");
-                    if (isMobile) toggleMenu();
+                    if (window.innerWidth <= 768) toggleMenu();
                 });
             }
         }
@@ -356,22 +373,20 @@
         // Add uploaded images
         function addImageFiles() {
             const files = $("#image-upload")[0].files;
-            let loaded = 0;
-            for (let i = 0; i < Math.min(files.length, 5); i++) { // Limit to 5 images
+            for (let i = 0; i < files.length; i++) {
                 const file = files[i];
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    resizeImage(e.target.result, isMobile ? 512 : 1024, function(resizedUrl) {
-                        images.push(resizedUrl);
+                    resizeImage(e.target.result, (resizedData) => {
+                        images.push(resizedData);
                         updateImageList();
                         if (images.length === 1) changePicture();
-                        loaded++;
-                        if (loaded === Math.min(files.length, 5) && isMobile) toggleMenu();
                     });
                 };
                 reader.readAsDataURL(file);
             }
             $("#image-upload").val("");
+            if (window.innerWidth <= 768) toggleMenu();
         }
 
         // Delete image
@@ -381,7 +396,7 @@
             updateImageList();
             if (images.length > 0) changePicture();
             else scope.setImage(null);
-            if (isMobile) toggleMenu();
+            if (window.innerWidth <= 768) toggleMenu();
         }
 
         // Update image list display
@@ -391,7 +406,7 @@
             images.forEach((img, i) => {
                 list.append(`
                     <li>
-                        <span>Изображение ${i + 1}</span>
+                        <span>${img.substring(0, 30)}${img.length > 30 ? '...' : ''}</span>
                         <button class="delete-btn" onclick="deleteImage(${i})" title="Удалить изображение">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -413,9 +428,9 @@
         // Smooth auto animation
         function animate() {
             if (autoAnimation) {
-                time += 0.01 * sensitivity; // Slower animation
+                time += ANIMATION_STEP * sensitivity;
                 scope.angleTarget = 0.5 + 0.5 * Math.sin(time);
-                scope.zoomTarget = 1.0 + 0.3 * Math.sin(time * 0.7); // Reduced zoom range
+                scope.zoomTarget = 1.0 + 0.5 * Math.sin(time * 0.7);
                 animationFrameId = requestAnimationFrame(animate);
             }
         }
@@ -444,7 +459,7 @@
                 animateBtn.removeClass("active");
                 cancelAnimationFrame(animationFrameId);
             }
-            if (isMobile) toggleMenu();
+            if (window.innerWidth <= 768) toggleMenu();
         }
 
         // Update sensitivity
@@ -481,21 +496,6 @@
             }
         }
 
-        // Stop recording
-        function stopRecording() {
-            if (mediaRecorder && isRecording) {
-                mediaRecorder.stop();
-                isRecording = false;
-                $("#recordBtn").html(`
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
-                    </svg>
-                    Начать запись
-                `);
-                $("#recordBtn").removeClass("active");
-            }
-        }
-
         // Start/stop recording
         function startStopRecording() {
             if (images.length === 0) {
@@ -504,32 +504,24 @@
             }
             const recordBtn = $("#recordBtn");
             const downloadVideoBtn = $("#downloadVideoBtn");
-            const mimeTypes = [
-                'video/webm;codecs=vp9',
-                'video/webm;codecs=vp8',
-                'video/mp4;codecs=avc1.42E01E',
-                'video/mp4;codecs=avc1.4D401E'
-            ];
-            const selectedMimeType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type));
-            const fileExtension = selectedMimeType && selectedMimeType.includes('mp4') ? 'mp4' : 'webm';
-
-            if (!selectedMimeType) {
-                alert('Ваш браузер не поддерживает запись видео. Ошибка: неподдерживаемый кодек. Попробуйте Chrome или Firefox.');
-                return;
-            }
-
+            const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.4D401E') ? 'video/mp4;codecs=avc1.4D401E' : 'video/webm;codecs=vp9';
+            const fileExtension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
             if (!isRecording) {
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    alert(`Формат ${fileExtension.toUpperCase()} не поддерживается вашим браузером. Попробуйте использовать Chrome.`);
+                    return;
+                }
                 if (!autoAnimation) {
                     toggleAutoAnimation();
                 }
                 recordedChunks = [];
                 scope.domElement.width = RECORDING_PX;
                 scope.domElement.height = RECORDING_PX;
-                const stream = scope.domElement.captureStream(15); // Lower frame rate
+                const stream = scope.domElement.captureStream(RECORDING_FPS);
                 try {
                     mediaRecorder = new MediaRecorder(stream, {
-                        mimeType: selectedMimeType,
-                        videoBitsPerSecond: isMobile ? 2500000 : 5000000 // Lower bitrate
+                        mimeType: mimeType,
+                        videoBitsPerSecond: RECORDING_BITRATE
                     });
                     mediaRecorder.ondataavailable = (event) => {
                         if (event.data.size > 0) {
@@ -539,13 +531,13 @@
                     mediaRecorder.onstop = () => {
                         downloadVideoBtn.prop("disabled", recordedChunks.length === 0);
                         resetRecordTimer();
-                        scope.domElement.width = container[0].clientWidth * (isMobile ? 0.6 : 0.8);
-                        scope.domElement.height = container[0].clientHeight * (isMobile ? 0.6 : 0.8);
+                        scope.domElement.width = container[0].clientWidth;
+                        scope.domElement.height = container[0].clientHeight;
                         scope.resizeHandler();
                     };
                     mediaRecorder.onerror = (event) => {
                         console.error('MediaRecorder error:', event.error);
-                        alert(`Ошибка записи видео: ${event.error.message || 'Неизвестная ошибка'}. Попробуйте Chrome или Firefox.`);
+                        alert('Ошибка записи видео: ' + event.error.message + '. Попробуйте уменьшить скорость анимации или разрешение.');
                         stopRecording();
                     };
                     mediaRecorder.start();
@@ -561,12 +553,20 @@
                     recordTimerId = setInterval(updateRecordTimer, 1000);
                 } catch (e) {
                     console.error('Failed to start recording:', e);
-                    alert(`Не удалось начать запись: ${e.message || 'Неизвестная ошибка'}. Попробуйте Chrome или Firefox.`);
+                    alert('Не удалось начать запись. Формат MP4 может не поддерживаться. Попробуйте использовать Chrome или уменьшить настройки.');
                 }
             } else {
-                stopRecording();
+                mediaRecorder.stop();
+                isRecording = false;
+                recordBtn.html(`
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                    </svg>
+                    Начать запись
+                `);
+                recordBtn.removeClass("active");
             }
-            if (isMobile) toggleMenu();
+            if (window.innerWidth <= 768) toggleMenu();
         }
 
         // Download recorded video
@@ -575,8 +575,8 @@
                 alert('Нет записанного видео для скачивания!');
                 return;
             }
-            const mimeType = recordedChunks[0].type;
-            const fileExtension = mimeType.includes('mp4') ? 'mp4' : 'webm';
+            const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.4D401E') ? 'video/mp4' : 'video/webm';
+            const fileExtension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
             const blob = new Blob(recordedChunks, { type: mimeType });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -586,20 +586,23 @@
             URL.revokeObjectURL(url);
             recordedChunks = [];
             $("#downloadVideoBtn").prop("disabled", true);
-            if (isMobile) toggleMenu();
+            if (window.innerWidth <= 768) toggleMenu();
         }
 
         // Auto change picture
-        setInterval(changePicture, 10000); // Slower interval
+        setInterval(changePicture, 6000);
 
-        // Mouse and touch move handler (restored original for smooth control)
+        // Throttled mouse and touch move handler
         function handleMove(event) {
+            const now = Date.now();
+            if (now - lastMoveTime < MOVE_THROTTLE) return;
+            lastMoveTime = now;
             if (!autoAnimation) {
                 const isTouch = event.type === 'touchmove';
                 const clientX = isTouch ? event.touches[0].clientX : event.pageX;
                 const clientY = isTouch ? event.touches[0].clientY : event.pageY;
-                const factorx = clientX / window.innerWidth;
-                const factory = clientY / window.innerHeight;
+                const factorx = clientX / $(window).width();
+                const factory = clientY / $(window).height();
                 scope.angleTarget = factorx * sensitivity;
                 scope.zoomTarget = (1.0 + 0.5 * factory) * sensitivity;
             }
@@ -607,29 +610,16 @@
         $(window).on('mousemove', handleMove);
         $(window).on('touchmove', handleMove);
 
-        // Debounce function for resize only
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
         // Resize handler
-        const resizeHandler = debounce(function() {
+        const resizeHandler = function() {
             if (!isRecording) {
                 const canvasWidth = container[0].clientWidth;
                 const canvasHeight = container[0].clientHeight;
-                scope.domElement.width = canvasWidth * (isMobile ? 0.6 : 0.8);
-                scope.domElement.height = canvasHeight * (isMobile ? 0.6 : 0.8);
+                scope.domElement.width = canvasWidth;
+                scope.domElement.height = canvasHeight;
                 scope.resizeHandler();
             }
-        }, 100);
+        };
 
         $(window).resize(resizeHandler);
         $(window).resize();

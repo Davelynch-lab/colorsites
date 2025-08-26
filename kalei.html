@@ -50,7 +50,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-left: 380px; /* 320px panel + 30px margin-left + 30px margin-right */
+            margin-left: 380px;
         }
         #kaleidoscope-container {
             width: 100%;
@@ -236,7 +236,6 @@
             <div class="input-group">
                 <input type="text" id="image-url" placeholder="Введите URL изображения" class="focus:ring-2 focus:ring-cyan-400">
                 <button onclick="addImageUrl()" title="Добавить URL" class="action-btn">
-                   
                     <p style="margin: 10px;">Добавить фото</p>
                 </button>
             </div>
@@ -287,6 +286,8 @@
 
         // Initialize kaleidoscope
         const container = $("#kaleidoscope-container");
+        const isMobile = window.innerWidth <= 768;
+        const RECORDING_PX = isMobile ? 720 : 1080; // Lower resolution for mobile
         const scope = new Graphemescope(container[0]);
         let images = [];
         let index = 0;
@@ -300,12 +301,11 @@
         let recordTimerId = null;
         let recordStartTime = null;
         const MAX_RECORDING_DURATION = 60;
-        const RECORDING_PX = 1280;
 
         // Go back to main.html
         function goBack() {
             window.location.href = 'main.html';
-            if (window.innerWidth <= 768) toggleMenu();
+            if (isMobile) toggleMenu();
         }
 
         // Toggle menu for mobile
@@ -321,7 +321,7 @@
                 updateImageList();
                 if (images.length === 1) changePicture();
                 $("#image-url").val("");
-                if (window.innerWidth <= 768) toggleMenu();
+                if (isMobile) toggleMenu();
             }
         }
 
@@ -339,7 +339,7 @@
                 reader.readAsDataURL(file);
             }
             $("#image-upload").val("");
-            if (window.innerWidth <= 768) toggleMenu();
+            if (isMobile) toggleMenu();
         }
 
         // Delete image
@@ -349,7 +349,7 @@
             updateImageList();
             if (images.length > 0) changePicture();
             else scope.setImage(null);
-            if (window.innerWidth <= 768) toggleMenu();
+            if (isMobile) toggleMenu();
         }
 
         // Update image list display
@@ -381,7 +381,7 @@
         // Smooth auto animation
         function animate() {
             if (autoAnimation) {
-                time += 0.02 * sensitivity;
+                time += 0.015 * sensitivity; // Slower animation
                 scope.angleTarget = 0.5 + 0.5 * Math.sin(time);
                 scope.zoomTarget = 1.0 + 0.5 * Math.sin(time * 0.7);
                 animationFrameId = requestAnimationFrame(animate);
@@ -412,7 +412,7 @@
                 animateBtn.removeClass("active");
                 cancelAnimationFrame(animationFrameId);
             }
-            if (window.innerWidth <= 768) toggleMenu();
+            if (isMobile) toggleMenu();
         }
 
         // Update sensitivity
@@ -457,13 +457,20 @@
             }
             const recordBtn = $("#recordBtn");
             const downloadVideoBtn = $("#downloadVideoBtn");
-            const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.4D401E') ? 'video/mp4;codecs=avc1.4D401E' : 'video/webm;codecs=vp9';
-            const fileExtension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
+            const mimeTypes = [
+                'video/webm;codecs=vp9',
+                'video/webm;codecs=vp8',
+                'video/mp4;codecs=avc1.4D401E'
+            ];
+            let selectedMimeType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type));
+            const fileExtension = selectedMimeType && selectedMimeType.includes('mp4') ? 'mp4' : 'webm';
+
+            if (!selectedMimeType) {
+                alert('Ваш браузер не поддерживает запись видео. Попробуйте использовать Chrome или Firefox.');
+                return;
+            }
+
             if (!isRecording) {
-                if (!MediaRecorder.isTypeSupported(mimeType)) {
-                    alert(`Формат ${fileExtension.toUpperCase()} не поддерживается вашим браузером. Попробуйте использовать Chrome.`);
-                    return;
-                }
                 if (!autoAnimation) {
                     toggleAutoAnimation();
                 }
@@ -473,8 +480,8 @@
                 const stream = scope.domElement.captureStream(30);
                 try {
                     mediaRecorder = new MediaRecorder(stream, {
-                        mimeType: mimeType,
-                        videoBitsPerSecond: 10000000
+                        mimeType: selectedMimeType,
+                        videoBitsPerSecond: isMobile ? 5000000 : 8000000 // Lower bitrate for mobile
                     });
                     mediaRecorder.ondataavailable = (event) => {
                         if (event.data.size > 0) {
@@ -506,7 +513,7 @@
                     recordTimerId = setInterval(updateRecordTimer, 1000);
                 } catch (e) {
                     console.error('Failed to start recording:', e);
-                    alert('Не удалось начать запись. Формат MP4 может не поддерживаться. Попробуйте использовать Chrome.');
+                    alert('Не удалось начать запись. Попробуйте другой браузер, например Chrome или Firefox.');
                 }
             } else {
                 mediaRecorder.stop();
@@ -519,7 +526,7 @@
                 `);
                 recordBtn.removeClass("active");
             }
-            if (window.innerWidth <= 768) toggleMenu();
+            if (isMobile) toggleMenu();
         }
 
         // Download recorded video
@@ -528,8 +535,8 @@
                 alert('Нет записанного видео для скачивания!');
                 return;
             }
-            const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.4D401E') ? 'video/mp4' : 'video/webm';
-            const fileExtension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
+            const mimeType = recordedChunks[0].type;
+            const fileExtension = mimeType.includes('mp4') ? 'mp4' : 'webm';
             const blob = new Blob(recordedChunks, { type: mimeType });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -539,14 +546,27 @@
             URL.revokeObjectURL(url);
             recordedChunks = [];
             $("#downloadVideoBtn").prop("disabled", true);
-            if (window.innerWidth <= 768) toggleMenu();
+            if (isMobile) toggleMenu();
         }
 
         // Auto change picture
-        setInterval(changePicture, 6000);
+        setInterval(changePicture, 8000); // Slower image change interval
+
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
 
         // Mouse and touch move handler
-        function handleMove(event) {
+        const handleMove = debounce(function(event) {
             if (!autoAnimation) {
                 const isTouch = event.type === 'touchmove';
                 const clientX = isTouch ? event.touches[0].clientX : event.pageX;
@@ -556,20 +576,21 @@
                 scope.angleTarget = factorx * sensitivity;
                 scope.zoomTarget = (1.0 + 0.5 * factory) * sensitivity;
             }
-        }
+        }, 50); // Debounce to 50ms
+
         $(window).on('mousemove', handleMove);
         $(window).on('touchmove', handleMove);
 
         // Resize handler
-        const resizeHandler = function() {
+        const resizeHandler = debounce(function() {
             if (!isRecording) {
                 const canvasWidth = container[0].clientWidth;
                 const canvasHeight = container[0].clientHeight;
-                scope.domElement.width = canvasWidth;
-                scope.domElement.height = canvasHeight;
+                scope.domElement.width = isMobile ? canvasWidth * 0.75 : canvasWidth; // Lower resolution for mobile
+                scope.domElement.height = isMobile ? canvasHeight * 0.75 : canvasHeight;
                 scope.resizeHandler();
             }
-        };
+        }, 100); // Debounce to 100ms
 
         $(window).resize(resizeHandler);
         $(window).resize();

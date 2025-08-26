@@ -136,6 +136,7 @@
             </ul>
         </details>
         <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-white mb-8 drop-shadow-lg">Генератор калейдоскопов</h1>
+
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="space-y-6">
                 <div class="card p-6 rounded-xl shadow-lg">
@@ -152,6 +153,8 @@
                                 <option>Спираль</option>
                                 <option>Орбиты</option>
                                 <option>Точки в Фигуры</option>
+                                <option>Точки в Смешанный</option>
+                                <option value="Crystal"><a href="kalei.html">Кристалическое (избранное)</a></option>
                             </select>
                         </div>
                         <div>
@@ -202,7 +205,6 @@
                         <button id="generateBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Создать узор">Сгенерировать</button>
                         <button id="animateBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Запустить/остановить анимацию">Анимировать</button>
                         <button id="recordBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Начать/остановить запись видео">Старт запись</button>
-                        <div id="recordTimer" class="text-center text-gray-700 font-semibold mt-4">Запись: 00:00</div>
                         <button id="downloadVideoBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Скачать записанное видео" disabled>Скачать видео</button>
                         <button id="viewBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Открыть узор">Открыть полное изображение</button>
                         <button id="saveBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Сохранить узор">Сохранить изображение</button>
@@ -1179,9 +1181,14 @@ document.getElementById('animationSpeedSlider').addEventListener('input', (e) =>
 });
 
 document.getElementById('modeCombo').addEventListener('change', () => {
-    stopAnimation();
-    stopFullAnimation();
-    stopRecording();
+    const selectedValue = document.getElementById('modeCombo').value;
+    if (selectedValue === 'Crystal') {
+        window.location.href = 'kalei.html';
+    } else {
+        stopAnimation();
+        stopFullAnimation();
+        stopRecording();
+    }
 });
 
 document.getElementById('addColorBtn').addEventListener('click', () => {

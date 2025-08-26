@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Калейдоскоп Генератор</title>
+    <title>Калейдоскоп Генератор 3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
@@ -282,7 +282,7 @@
         </div>
     </div>
     <script>
-        (function(){var a,b;b=function(){return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||function(a){return window.setTimeout(a,1e3/30)}}(),window.Graphemescope=a=function(){function a(a){var c=this;this.parentElement=null!=a?a:window.document.body,this.enabled=!0,this.radiusFactor=1,this.zoomFactor=1,this.angleFactor=0,this.zoomTarget=1.2,this.angleTarget=.8,this.easeEnabled=!0,this.ease=.1,null==this.domElement&&(this.domElement=document.createElement("canvas")),null==this.ctx&&(this.ctx=this.domElement.getContext("2d")),this.alphaFactor=1,this.alphaTarget=1,this.patternCache=null,this.patternProxyCache=null,this.parentElement.appendChild(this.domElement),this.oldResizeHandler=function(){},null!==window.onresize&&(this.oldResizeHandler=window.onresize),window.onresize=function(){return c.resizeHandler()},this.resizeHandler(),b(function(){return c.animationFrame()})}return a.prototype.animationFrame=function(){var a=this;return b(function(){return a.animationFrame()}),this.enabled?(this.update(),this.draw()):void 0},a.prototype.resizeHandler=function(){return this.width=this.domElement.width=this.parentElement.offsetWidth,this.height=this.domElement.height=this.parentElement.offsetHeight,this.radius=.5*this.radiusFactor*Math.min(this.width,this.height),this.radiusHeight=.5*Math.sqrt(3)*this.radius,this.oldResizeHandler()},a.prototype.update=function(){return this.easeEnabled?(this.angleFactor+=(this.angleTarget-this.angleFactor)*this.ease,this.zoomFactor+=(this.zoomTarget-this.zoomFactor)*this.ease,this.alphaFactor+=(this.alphaTarget-this.alphaFactor)*this.ease):(this.angleFactor=this.angleTarget,this.zoomFactor=this.zoomTarget,this.alphaFactor=this.alphaTarget)},a.prototype.drawImage=function(a){var b,c;return this.ctx.save(),b=2/3*this.radiusHeight,c=this.zoomFactor*b/(.5*Math.min(a.width,a.height)),this.ctx.translate(0,b),this.ctx.scale(c,c),this.ctx.rotate(2*this.angleFactor*Math.PI),this.ctx.translate(-.5*a.width,-.5*a.height),this.ctx.fill(),this.ctx.restore()},a.prototype.drawCell=function(a){var b,c,d;for(d=[],b=c=0;6>c;b=++c)this.ctx.save(),this.ctx.rotate(2*b*Math.PI/6),this.ctx.scale([-1,1][b%2],1),this.ctx.beginPath(),this.ctx.moveTo(0,0),this.ctx.lineTo(-.5*this.radius,1*this.radiusHeight),this.ctx.lineTo(.5*this.radius,1*this.radiusHeight),this.ctx.closePath(),this.drawImage(a),d.push(this.ctx.restore());return d},a.prototype.drawLayer=function(a){var b,c,d,e,f,g,h,i,j,k,l,m,n=window.innerWidth<=768?2:4,o=window.innerWidth<=768?3:5;for(this.ctx.save(),this.ctx.translate(.5*this.width,.5*this.height),f=Math.ceil(.5*this.height/this.radiusHeight/n),c=Math.ceil(.5*this.width/(3*this.radius)/o),d=function(){l=[];for(var a=-c;c>=-c?c>=a:a>=c;c>=-c?a++:a--)l.push(a);return l}.apply(this),g=function(){m=[];for(var a=-f;f>=-f?f>=a:a>=f;f>=-f?a++:a--)m.push(a);return m}.apply(this),h=0,j=g.length;j>h;h++){for(e=g[h],this.ctx.save(),this.ctx.translate(0,this.radiusHeight*e),Math.abs(e)%2&&this.ctx.translate(1.5*this.radius,0),i=0,k=d.length;k>i;i++)b=d[i],this.ctx.save(),this.ctx.translate(3*b*this.radius,0),this.drawCell(a),this.ctx.restore();this.ctx.restore()}return this.ctx.restore()},a.prototype.draw=function(){this.ctx.clearRect(0,0,this.width,this.height);return null!=this.imageProxy&&(this.ctx.fillStyle=this.patternProxyCache,this.ctx.globalAlpha=1-this.alphaFactor,this.drawLayer(this.imageProxy)),null!=this.image?(this.ctx.fillStyle=this.patternCache,this.ctx.globalAlpha=this.alphaFactor,this.drawLayer(this.image)):void 0},a.prototype.setImageDirect=function(a){return null!=this.image&&(this.imageProxy=this.image,this.patternProxyCache=this.patternCache),this.image=a,this.patternCache=this.ctx.createPattern(this.image,"repeat"),this.alphaFactor=0},a.prototype.setImage=function(a){var b,c=this;return"string"==typeof a?(b=new Image,b.src=a,b.onload=function(){return c.setImageDirect(b)}):this.setImageDirect(a)},a}()}).call(this);
+        (function(){var a,b;b=function(){return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||function(a){return window.setTimeout(a,1e3/30)}}(),window.Graphemescope=a=function(){function a(a){var c=this;this.parentElement=null!=a?a:window.document.body,this.enabled=!0,this.radiusFactor=1,this.zoomFactor=1,this.angleFactor=0,this.zoomTarget=1.2,this.angleTarget=.8,this.easeEnabled=!0,this.ease=.1,null==this.domElement&&(this.domElement=document.createElement("canvas")),null==this.ctx&&(this.ctx=this.domElement.getContext("2d")),this.alphaFactor=1,this.alphaTarget=1,this.parentElement.appendChild(this.domElement),this.oldResizeHandler=function(){},null!==window.onresize&&(this.oldResizeHandler=window.onresize),window.onresize=function(){return c.resizeHandler()},this.resizeHandler(),b(function(){return c.animationFrame()})}return a.prototype.animationFrame=function(){var a=this;return b(function(){return a.animationFrame()}),this.enabled?(this.update(),this.draw()):void 0},a.prototype.resizeHandler=function(){return this.width=this.domElement.width=this.parentElement.offsetWidth,this.height=this.domElement.height=this.parentElement.offsetHeight,this.radius=.5*this.radiusFactor*Math.min(this.width,this.height),this.radiusHeight=.5*Math.sqrt(3)*this.radius,this.oldResizeHandler()},a.prototype.update=function(){return this.easeEnabled?(this.angleFactor+=(this.angleTarget-this.angleFactor)*this.ease,this.zoomFactor+=(this.zoomTarget-this.zoomFactor)*this.ease,this.alphaFactor+=(this.alphaTarget-this.alphaFactor)*this.ease):(this.angleFactor=this.angleTarget,this.zoomFactor=this.zoomTarget,this.alphaFactor=this.alphaTarget)},a.prototype.drawImage=function(a){var b,c;return this.ctx.save(),b=2/3*this.radiusHeight,c=this.zoomFactor*b/(.5*Math.min(a.width,a.height)),this.ctx.translate(0,b),this.ctx.scale(c,c),this.ctx.rotate(2*this.angleFactor*Math.PI),this.ctx.translate(-.5*a.width,-.5*a.height),this.ctx.fill(),this.ctx.restore()},a.prototype.drawCell=function(a){var b,c,d;for(d=[],b=c=0;6>c;b=++c)this.ctx.save(),this.ctx.rotate(2*b*Math.PI/6),this.ctx.scale([-1,1][b%2],1),this.ctx.beginPath(),this.ctx.moveTo(0,0),this.ctx.lineTo(-.5*this.radius,1*this.radiusHeight),this.ctx.lineTo(.5*this.radius,1*this.radiusHeight),this.ctx.closePath(),this.drawImage(a),d.push(this.ctx.restore());return d},a.prototype.drawLayer=function(a){var b,c,d,e,f,g,h,i,j,k,l,m;for(this.ctx.save(),this.ctx.translate(.5*this.width,.5*this.height),f=Math.ceil(.5*this.height/this.radiusHeight),c=Math.ceil(.5*this.width/(3*this.radius)),d=function(){l=[];for(var a=-c;c>=-c?c>=a:a>=c;c>=-c?a++:a--)l.push(a);return l}.apply(this),g=function(){m=[];for(var a=-f;f>=-f?f>=a:a>=f;f>=-f?a++:a--)m.push(a);return m}.apply(this),h=0,j=g.length;j>h;h++){for(e=g[h],this.ctx.save(),this.ctx.translate(0,this.radiusHeight*e),Math.abs(e)%2&&this.ctx.translate(1.5*this.radius,0),i=0,k=d.length;k>i;i++)b=d[i],this.ctx.save(),this.ctx.translate(3*b*this.radius,0),this.drawCell(a),this.ctx.restore();this.ctx.restore()}return this.ctx.restore()},a.prototype.draw=function(){return null!=this.imageProxy&&(this.ctx.fillStyle=this.patternProxy,this.ctx.globalAlpha=1-this.alphaFactor,this.drawLayer(this.imageProxy)),null!=this.image?(this.ctx.fillStyle=this.pattern,this.ctx.globalAlpha=this.alphaFactor,this.drawLayer(this.image)):void 0},a.prototype.setImageDirect=function(a){return null!=this.image&&(this.imageProxy=this.image,this.patternProxy=this.pattern),this.image=a,this.pattern=this.ctx.createPattern(this.image,"repeat"),this.alphaFactor=0},a.prototype.setImage=function(a){var b,c=this;return"string"==typeof a?(b=new Image,b.src=a,b.onload=function(){return c.setImageDirect(b)}):this.setImageDirect(a)},a}()}).call(this);
 
         // Initialize kaleidoscope
         const container = $("#kaleidoscope-container");
@@ -299,22 +299,7 @@
         let recordTimerId = null;
         let recordStartTime = null;
         const MAX_RECORDING_DURATION = 60;
-        let RECORDING_PX = window.innerWidth <= 768 ? 720 : 1280;
-        let lastAngleTarget = 0;
-        let lastZoomTarget = 1.2;
-
-        // Debounce utility
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
+        const RECORDING_PX = 720; // Reduced resolution for better performance
 
         // Go back to main.html
         function goBack() {
@@ -327,56 +312,77 @@
             $('.left-panel').toggleClass('hidden');
         }
 
+        // Optimize image loading
+        async function loadImage(src) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.src = src;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const maxSize = 512; // Limit image size
+                    let { width, height } = img;
+                    if (width > maxSize || height > maxSize) {
+                        const ratio = Math.min(maxSize / width, maxSize / height);
+                        width *= ratio;
+                        height *= ratio;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.8)); // Compress image
+                };
+                img.onerror = () => reject(new Error('Не удалось загрузить изображение: ' + src));
+            });
+        }
+
         // Add image URL
-        function addImageUrl() {
+        async function addImageUrl() {
             const url = $("#image-url").val().trim();
             if (url) {
-                images.push(url);
-                updateImageList();
-                if (images.length === 1) changePicture();
-                $("#image-url").val("");
-                if (window.innerWidth <= 768) toggleMenu();
+                try {
+                    const optimizedSrc = await loadImage(url);
+                    images.push(optimizedSrc);
+                    updateImageList();
+                    if (images.length === 1) changePicture();
+                    $("#image-url").val("");
+                    if (window.innerWidth <= 768) toggleMenu();
+                } catch (error) {
+                    alert(`Ошибка загрузки изображения по URL: ${error.message}`);
+                }
             }
         }
 
-        // Add uploaded images with resizing
-        function addImageFiles() {
+        // Add uploaded images
+        async function addImageFiles() {
             const files = $("#image-upload")[0].files;
+            const promises = [];
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.src = e.target.result;
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        const maxSize = 800;
-                        let width = img.width;
-                        let height = img.height;
-                        if (width > height) {
-                            if (width > maxSize) {
-                                height *= maxSize / width;
-                                width = maxSize;
-                            }
-                        } else {
-                            if (height > maxSize) {
-                                width *= maxSize / height;
-                                height = maxSize;
-                            }
+                promises.push(new Promise((resolve, reject) => {
+                    reader.onload = async () => {
+                        try {
+                            const optimizedSrc = await loadImage(reader.result);
+                            resolve(optimizedSrc);
+                        } catch (error) {
+                            reject(error);
                         }
-                        canvas.width = width;
-                        canvas.height = height;
-                        ctx.drawImage(img, 0, 0, width, height);
-                        images.push(canvas.toDataURL('image/jpeg', 0.8));
-                        updateImageList();
-                        if (images.length === 1) changePicture();
                     };
-                };
-                reader.readAsDataURL(file);
+                    reader.onerror = () => reject(new Error('Ошибка чтения файла: ' + file.name));
+                    reader.readAsDataURL(file);
+                }));
             }
-            $("#image-upload").val("");
-            if (window.innerWidth <= 768) toggleMenu();
+            try {
+                const newImages = await Promise.all(promises);
+                images.push(...newImages);
+                updateImageList();
+                if (images.length === newImages.length) changePicture();
+                $("#image-upload").val("");
+                if (window.innerWidth <= 768) toggleMenu();
+            } catch (error) {
+                alert(`Ошибка при загрузке изображений: ${error.message}`);
+            }
         }
 
         // Delete image
@@ -415,17 +421,12 @@
             }
         }
 
-        // Smooth auto animation with frame rate control
-        let lastAnimationTime = 0;
-        const FPS_LIMIT = 30;
-        function animate(currentTime) {
+        // Smooth auto animation
+        function animate() {
             if (autoAnimation) {
-                if (currentTime - lastAnimationTime >= 1000 / FPS_LIMIT) {
-                    time += 0.02 * sensitivity;
-                    scope.angleTarget = 0.5 + 0.5 * Math.sin(time);
-                    scope.zoomTarget = 1.0 + 0.5 * Math.sin(time * 0.7);
-                    lastAnimationTime = currentTime;
-                }
+                time += 0.02 * sensitivity;
+                scope.angleTarget = 0.5 + 0.5 * Math.sin(time);
+                scope.zoomTarget = 1.0 + 0.5 * Math.sin(time * 0.7);
                 animationFrameId = requestAnimationFrame(animate);
             }
         }
@@ -442,7 +443,6 @@
                     Остановить анимацию
                 `);
                 animateBtn.addClass("active");
-                lastAnimationTime = performance.now();
                 animationFrameId = requestAnimationFrame(animate);
             } else {
                 animateBtn.html(`
@@ -500,11 +500,11 @@
             }
             const recordBtn = $("#recordBtn");
             const downloadVideoBtn = $("#downloadVideoBtn");
-            const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.4D401E') ? 'video/mp4;codecs=avc1.4D401E' : 'video/webm;codecs=vp9';
-            const fileExtension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
+            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm;codecs=vp8';
+            const fileExtension = 'webm';
             if (!isRecording) {
                 if (!MediaRecorder.isTypeSupported(mimeType)) {
-                    alert(`Формат ${fileExtension.toUpperCase()} не поддерживается вашим браузером. Попробуйте использовать Chrome или другой современный браузер.`);
+                    alert(`Формат ${fileExtension.toUpperCase()} не поддерживается вашим браузером. Пожалуйста, используйте современный браузер, например, Chrome или Firefox.`);
                     return;
                 }
                 if (!autoAnimation) {
@@ -513,12 +513,11 @@
                 recordedChunks = [];
                 scope.domElement.width = RECORDING_PX;
                 scope.domElement.height = RECORDING_PX;
-                scope.resizeHandler();
                 const stream = scope.domElement.captureStream(30);
                 try {
                     mediaRecorder = new MediaRecorder(stream, {
                         mimeType: mimeType,
-                        videoBitsPerSecond: window.innerWidth <= 768 ? 5000000 : 10000000
+                        videoBitsPerSecond: 5000000 // Reduced bitrate
                     });
                     mediaRecorder.ondataavailable = (event) => {
                         if (event.data.size > 0) {
@@ -534,10 +533,10 @@
                     };
                     mediaRecorder.onerror = (event) => {
                         console.error('MediaRecorder error:', event.error);
-                        alert(`Ошибка записи видео: ${event.error.message}. Убедитесь, что ваш браузер поддерживает формат ${fileExtension.toUpperCase()} и у вас достаточно ресурсов устройства. Попробуйте уменьшить разрешение или использовать Chrome.`);
+                        alert(`Ошибка записи видео: ${event.error.message}. Пожалуйста, проверьте настройки браузера и убедитесь, что используется поддерживаемый формат (WEBM). Попробуйте использовать Chrome или Firefox для лучшей совместимости.`);
                         stopRecording();
                     };
-                    mediaRecorder.start();
+                    mediaRecorder.start(1000); // Timeslice for smaller chunks
                     isRecording = true;
                     recordBtn.html(`
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -550,7 +549,7 @@
                     recordTimerId = setInterval(updateRecordTimer, 1000);
                 } catch (e) {
                     console.error('Failed to start recording:', e);
-                    alert(`Не удалось начать запись: ${e.message}. Убедитесь, что ваш браузер поддерживает формат ${fileExtension.toUpperCase()} и у вас достаточно ресурсов устройства. Попробуйте использовать Chrome.`);
+                    alert(`Не удалось начать запись: ${e.message}. Формат WEBM может не поддерживаться. Пожалуйста, используйте Chrome или Firefox и проверьте настройки браузера.`);
                 }
             } else {
                 mediaRecorder.stop();
@@ -566,29 +565,14 @@
             if (window.innerWidth <= 768) toggleMenu();
         }
 
-        // Stop recording
-        function stopRecording() {
-            if (mediaRecorder && isRecording) {
-                mediaRecorder.stop();
-                isRecording = false;
-                $("#recordBtn").html(`
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
-                    </svg>
-                    Начать запись
-                `);
-                $("#recordBtn").removeClass("active");
-            }
-        }
-
         // Download recorded video
         function downloadVideo() {
             if (recordedChunks.length === 0) {
                 alert('Нет записанного видео для скачивания!');
                 return;
             }
-            const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.4D401E') ? 'video/mp4' : 'video/webm';
-            const fileExtension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
+            const mimeType = 'video/webm';
+            const fileExtension = 'webm';
             const blob = new Blob(recordedChunks, { type: mimeType });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -604,28 +588,23 @@
         // Auto change picture
         setInterval(changePicture, 6000);
 
-        // Smooth mouse and touch move handler
-        const debouncedHandleMove = debounce(function(event) {
+        // Mouse and touch move handler
+        function handleMove(event) {
             if (!autoAnimation) {
                 const isTouch = event.type === 'touchmove';
                 const clientX = isTouch ? event.touches[0].clientX : event.pageX;
                 const clientY = isTouch ? event.touches[0].clientY : event.pageY;
-                const factorx = clientX / window.innerWidth;
-                const factory = clientY / window.innerHeight;
-                const newAngleTarget = factorx * sensitivity;
-                const newZoomTarget = (1.0 + 0.5 * factory) * sensitivity;
-                // Smooth interpolation
-                scope.angleTarget = lastAngleTarget + (newAngleTarget - lastAngleTarget) * 0.3;
-                scope.zoomTarget = lastZoomTarget + (newZoomTarget - lastZoomTarget) * 0.3;
-                lastAngleTarget = scope.angleTarget;
-                lastZoomTarget = scope.zoomTarget;
+                const factorx = clientX / $(window).width();
+                const factory = clientY / $(window).height();
+                scope.angleTarget = factorx * sensitivity;
+                scope.zoomTarget = (1.0 + 0.5 * factory) * sensitivity;
             }
-        }, 8);
+        }
+        $(window).on('mousemove', handleMove);
+        $(window).on('touchmove', handleMove);
 
-        $(window).off('mousemove touchmove').on('mousemove touchmove', debouncedHandleMove);
-
-        // Debounced resize handler
-        const debouncedResizeHandler = debounce(function() {
+        // Resize handler
+        const resizeHandler = function() {
             if (!isRecording) {
                 const canvasWidth = container[0].clientWidth;
                 const canvasHeight = container[0].clientHeight;
@@ -633,12 +612,12 @@
                 scope.domElement.height = canvasHeight;
                 scope.resizeHandler();
             }
-        }, 100);
+        };
 
-        $(window).off('resize').on('resize', debouncedResizeHandler);
-        debouncedResizeHandler();
+        $(window).resize(resizeHandler);
+        $(window).resize();
 
-        container.off('click').on('click', changePicture);
+        container.click(changePicture);
 
         // Initialize menu state based on screen size
         if (window.innerWidth > 768) {

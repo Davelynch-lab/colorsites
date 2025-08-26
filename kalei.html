@@ -282,7 +282,7 @@
         </div>
     </div>
     <script>
-        (function(){var a,b;b=function(){return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||function(a){return window.setTimeout(a,1e3/30)}}(),window.Graphemescope=a=function(){function a(a){var c=this;this.parentElement=null!=a?a:window.document.body,this.enabled=!0,this.radiusFactor=1,this.zoomFactor=1,this.angleFactor=0,this.zoomTarget=1.2,this.angleTarget=.8,this.easeEnabled=!0,this.ease=.1,null==this.domElement&&(this.domElement=document.createElement("canvas")),null==this.ctx&&(this.ctx=this.domElement.getContext("2d")),this.alphaFactor=1,this.alphaTarget=1,this.parentElement.appendChild(this.domElement),this.oldResizeHandler=function(){},null!==window.onresize&&(this.oldResizeHandler=window.onresize),window.onresize=function(){return c.resizeHandler()},this.resizeHandler(),b(function(){return c.animationFrame()})}return a.prototype.animationFrame=function(){var a=this;return b(function(){return a.animationFrame()}),this.enabled?(this.update(),this.draw()):void 0},a.prototype.resizeHandler=function(){return this.width=this.domElement.width=this.parentElement.offsetWidth,this.height=this.domElement.height=this.parentElement.offsetHeight,this.radius=.5*this.radiusFactor*Math.min(this.width,this.height),this.radiusHeight=.5*Math.sqrt(3)*this.radius,this.oldResizeHandler()},a.prototype.update=function(){return this.easeEnabled?(this.angleFactor+=(this.angleTarget-this.angleFactor)*this.ease,this.zoomFactor+=(this.zoomTarget-this.zoomFactor)*this.ease,this.alphaFactor+=(this.alphaTarget-this.alphaFactor)*this.ease):(this.angleFactor=this.angleTarget,this.zoomFactor=this.zoomTarget,this.alphaFactor=this.alphaTarget)},a.prototype.drawImage=function(a){var b,c;return this.ctx.save(),b=2/3*this.radiusHeight,c=this.zoomFactor*b/(.5*Math.min(a.width,a.height)),this.ctx.translate(0,b),this.ctx.scale(c,c),this.ctx.rotate(2*this.angleFactor*Math.PI),this.ctx.translate(-.5*a.width,-.5*a.height),this.ctx.fill(),this.ctx.restore()},a.prototype.drawCell=function(a){var b,c,d;for(d=[],b=c=0;6>c;b=++c)this.ctx.save(),this.ctx.rotate(2*b*Math.PI/6),this.ctx.scale([-1,1][b%2],1),this.ctx.beginPath(),this.ctx.moveTo(0,0),this.ctx.lineTo(-.5*this.radius,1*this.radiusHeight),this.ctx.lineTo(.5*this.radius,1*this.radiusHeight),this.ctx.closePath(),this.drawImage(a),d.push(this.ctx.restore());return d},a.prototype.drawLayer=function(a){var b,c,d,e,f,g,h,i,j,k,l,m;for(this.ctx.save(),this.ctx.translate(.5*this.width,.5*this.height),f=Math.ceil(.5*this.height/this.radiusHeight),c=Math.ceil(.5*this.width/(3*this.radius)),d=function(){l=[];for(var a=-c;c>=-c?c>=a:a>=c;c>=-c?a++:a--)l.push(a);return l}.apply(this),g=function(){m=[];for(var a=-f;f>=-f?f>=a:a>=f;f>=-f?a++:a--)m.push(a);return m}.apply(this),h=0,j=g.length;j>h;h++){for(e=g[h],this.ctx.save(),this.ctx.translate(0,this.radiusHeight*e),Math.abs(e)%2&&this.ctx.translate(1.5*this.radius,0),i=0,k=d.length;k>i;i++)b=d[i],this.ctx.save(),this.ctx.translate(3*b*this.radius,0),this.drawCell(a),this.ctx.restore();this.ctx.restore()}return this.ctx.restore()},a.prototype.draw=function(){return null!=this.imageProxy&&(this.ctx.fillStyle=this.patternProxy,this.ctx.globalAlpha=1-this.alphaFactor,this.drawLayer(this.imageProxy)),null!=this.image?(this.ctx.fillStyle=this.pattern,this.ctx.globalAlpha=this.alphaFactor,this.drawLayer(this.image)):void 0},a.prototype.setImageDirect=function(a){return null!=this.image&&(this.imageProxy=this.image,this.patternProxy=this.pattern),this.image=a,this.pattern=this.ctx.createPattern(this.image,"repeat"),this.alphaFactor=0},a.prototype.setImage=function(a){var b,c=this;return"string"==typeof a?(b=new Image,b.crossOrigin="anonymous",b.src=a,b.onload=function(){return c.setImageDirect(b)},b.onerror=function(){c.setImageDirect(null);alert("Ошибка загрузки изображения: сервер не поддерживает CORS или изображение недоступно. Попробуйте загрузить локальное изображение.")}):this.setImageDirect(a)},a}()}).call(this);
+        (function(){var a,b;b=function(){return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||function(a){return window.setTimeout(a,1e3/30)}}(),window.Graphemescope=a=function(){function a(a){var c=this;this.parentElement=null!=a?a:window.document.body,this.enabled=!0,this.radiusFactor=1,this.zoomFactor=1,this.angleFactor=0,this.zoomTarget=1.2,this.angleTarget=.8,this.easeEnabled=!0,this.ease=.1,null==this.domElement&&(this.domElement=document.createElement("canvas")),null==this.ctx&&(this.ctx=this.domElement.getContext("2d")),this.alphaFactor=1,this.alphaTarget=1,this.parentElement.appendChild(this.domElement),this.oldResizeHandler=function(){},null!==window.onresize&&(this.oldResizeHandler=window.onresize),window.onresize=function(){return c.resizeHandler()},this.resizeHandler(),b(function(){return c.animationFrame()})}return a.prototype.animationFrame=function(){var a=this;return b(function(){return a.animationFrame()}),this.enabled?(this.update(),this.needsRedraw&&this.draw(),this.needsRedraw=!1):void 0},a.prototype.resizeHandler=function(){var b=window.innerWidth<=768?.5:1;return this.width=this.domElement.width=this.parentElement.offsetWidth*b,this.height=this.domElement.height=this.parentElement.offsetHeight*b,this.radius=.5*this.radiusFactor*Math.min(this.width,this.height),this.radiusHeight=.5*Math.sqrt(3)*this.radius,this.needsRedraw=!0,this.oldResizeHandler()},a.prototype.update=function(){return this.easeEnabled?(this.angleFactor+=(this.angleTarget-this.angleFactor)*this.ease,this.zoomFactor+=(this.zoomTarget-this.zoomFactor)*this.ease,this.alphaFactor+=(this.alphaTarget-this.alphaFactor)*this.ease,this.needsRedraw=!0):(this.angleFactor=this.angleTarget,this.zoomFactor=this.zoomTarget,this.alphaFactor=this.alphaTarget,this.needsRedraw=!0)},a.prototype.drawImage=function(a){var b,c;return this.ctx.save(),b=2/3*this.radiusHeight,c=this.zoomFactor*b/(.5*Math.min(a.width,a.height)),this.ctx.translate(0,b),this.ctx.scale(c,c),this.ctx.rotate(2*this.angleFactor*Math.PI),this.ctx.translate(-.5*a.width,-.5*a.height),this.ctx.fill(),this.ctx.restore()},a.prototype.drawCell=function(a){var b,c,d;for(d=[],b=c=0;6>c;b=++c)this.ctx.save(),this.ctx.rotate(2*b*Math.PI/6),this.ctx.scale([-1,1][b%2],1),this.ctx.beginPath(),this.ctx.moveTo(0,0),this.ctx.lineTo(-.5*this.radius,1*this.radiusHeight),this.ctx.lineTo(.5*this.radius,1*this.radiusHeight),this.ctx.closePath(),this.drawImage(a),d.push(this.ctx.restore());return d},a.prototype.drawLayer=function(a){var b,c,d,e,f,g,h,i,j,k,l,m;for(this.ctx.save(),this.ctx.translate(.5*this.width,.5*this.height),f=Math.ceil(.5*this.height/this.radiusHeight),c=Math.ceil(.5*this.width/(3*this.radius)),d=function(){l=[];for(var a=-c;c>=-c?c>=a:a>=c;c>=-c?a++:a--)l.push(a);return l}.apply(this),g=function(){m=[];for(var a=-f;f>=-f?f>=a:a>=f;f>=-f?a++:a--)m.push(a);return m}.apply(this),h=0,j=g.length;j>h;h++){for(e=g[h],this.ctx.save(),this.ctx.translate(0,this.radiusHeight*e),Math.abs(e)%2&&this.ctx.translate(1.5*this.radius,0),i=0,k=d.length;k>i;i++)b=d[i],this.ctx.save(),this.ctx.translate(3*b*this.radius,0),this.drawCell(a),this.ctx.restore();this.ctx.restore()}return this.ctx.restore()},a.prototype.draw=function(){return null!=this.imageProxy&&(this.ctx.fillStyle=this.patternProxy,this.ctx.globalAlpha=1-this.alphaFactor,this.drawLayer(this.imageProxy)),null!=this.image?(this.ctx.fillStyle=this.pattern,this.ctx.globalAlpha=this.alphaFactor,this.drawLayer(this.image)):void 0},a.prototype.setImageDirect=function(a){return null!=this.image&&(this.imageProxy=this.image,this.patternProxy=this.pattern),this.image=a,this.pattern=this.ctx.createPattern(this.image,"repeat"),this.alphaFactor=0,this.needsRedraw=!0},a.prototype.setImage=function(a){var b,c=this;return"string"==typeof a?(b=new Image,b.crossOrigin="anonymous",b.src=a,b.onload=function(){return c.setImageDirect(b)},b.onerror=function(){alert("Ошибка загрузки изображения: Не удалось загрузить изображение по URL. Убедитесь, что URL корректен и сервер поддерживает CORS.")}):this.setImageDirect(a)},a}()}).call(this);
 
         // Initialize kaleidoscope
         const container = $("#kaleidoscope-container");
@@ -299,7 +299,7 @@
         let recordTimerId = null;
         let recordStartTime = null;
         const MAX_RECORDING_DURATION = 60;
-        const RECORDING_PX = 720;
+        const RECORDING_PX = window.innerWidth <= 768 ? 720 : 1280;
 
         // Go back to main.html
         function goBack() {
@@ -312,84 +312,47 @@
             $('.left-panel').toggleClass('hidden');
         }
 
-        // Optimize image loading for local files
-        async function loadImage(src) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.src = src;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const maxSize = 512;
-                    let { width, height } = img;
-                    if (width > maxSize || height > maxSize) {
-                        const ratio = Math.min(maxSize / width, maxSize / height);
-                        width *= ratio;
-                        height *= ratio;
-                    }
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toDataURL('image/jpeg', 0.8));
-                };
-                img.onerror = () => reject(new Error('Не удалось загрузить изображение: ' + src));
-            });
-        }
-
         // Add image URL
-        async function addImageUrl() {
+        function addImageUrl() {
             const url = $("#image-url").val().trim();
             if (url) {
-                try {
-                    // Attempt to load the image to check if it works
-                    const img = new Image();
-                    img.crossOrigin = "anonymous";
-                    img.src = url;
-                    await new Promise((resolve, reject) => {
-                        img.onload = resolve;
-                        img.onerror = () => reject(new Error('Не удалось загрузить изображение: сервер не поддерживает CORS или изображение недоступно.'));
-                    });
-                    images.push(url);
-                    updateImageList();
-                    if (images.length === 1) changePicture();
-                    $("#image-url").val("");
-                    if (window.innerWidth <= 768) toggleMenu();
-                } catch (error) {
-                    alert(`Ошибка загрузки изображения по URL: ${error.message} Попробуйте загрузить локальное изображение.`);
-                }
+                images.push(url);
+                updateImageList();
+                if (images.length === 1) changePicture();
+                $("#image-url").val("");
+                if (window.innerWidth <= 768) toggleMenu();
             }
         }
 
         // Add uploaded images
-        async function addImageFiles() {
+        function addImageFiles() {
             const files = $("#image-upload")[0].files;
-            const promises = [];
-            for (let i = 0; i < files.length; i++) {
+            let loaded = 0;
+            const total = files.length;
+            if (total === 0) return;
+            for (let i = 0; i < total; i++) {
                 const file = files[i];
                 const reader = new FileReader();
-                promises.push(new Promise((resolve, reject) => {
-                    reader.onload = async () => {
-                        try {
-                            const optimizedSrc = await loadImage(reader.result);
-                            resolve(optimizedSrc);
-                        } catch (error) {
-                            reject(error);
-                        }
-                    };
-                    reader.onerror = () => reject(new Error('Ошибка чтения файла: ' + file.name));
-                    reader.readAsDataURL(file);
-                }));
+                reader.onload = function(e) {
+                    images.push(e.target.result);
+                    loaded++;
+                    if (loaded === total) {
+                        updateImageList();
+                        if (images.length === total) changePicture();
+                        if (window.innerWidth <= 768) toggleMenu();
+                    }
+                };
+                reader.onerror = function() {
+                    alert("Ошибка загрузки файла: Не удалось прочитать файл " + file.name);
+                    loaded++;
+                    if (loaded === total) {
+                        updateImageList();
+                        if (window.innerWidth <= 768) toggleMenu();
+                    }
+                };
+                reader.readAsDataURL(file);
             }
-            try {
-                const newImages = await Promise.all(promises);
-                images.push(...newImages);
-                updateImageList();
-                if (images.length === newImages.length) changePicture();
-                $("#image-upload").val("");
-                if (window.innerWidth <= 768) toggleMenu();
-            } catch (error) {
-                alert(`Ошибка при загрузке изображений: ${error.message}`);
-            }
+            $("#image-upload").val("");
         }
 
         // Delete image
@@ -434,6 +397,7 @@
                 time += 0.02 * sensitivity;
                 scope.angleTarget = 0.5 + 0.5 * Math.sin(time);
                 scope.zoomTarget = 1.0 + 0.5 * Math.sin(time * 0.7);
+                scope.needsRedraw = true;
                 animationFrameId = requestAnimationFrame(animate);
             }
         }
@@ -507,24 +471,35 @@
             }
             const recordBtn = $("#recordBtn");
             const downloadVideoBtn = $("#downloadVideoBtn");
-            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm;codecs=vp8';
-            const fileExtension = 'webm';
-            if (!isRecording) {
-                if (!MediaRecorder.isTypeSupported(mimeType)) {
-                    alert(`Формат ${fileExtension.toUpperCase()} не поддерживается вашим браузером. Пожалуйста, используйте современный браузер, например, Chrome или Firefox.`);
-                    return;
+            const codecs = [
+                { mime: 'video/mp4;codecs=avc1.4D401E', ext: 'mp4', bits: 5000000 },
+                { mime: 'video/webm;codecs=vp9', ext: 'webm', bits: 5000000 },
+                { mime: 'video/webm;codecs=vp8', ext: 'webm', bits: 5000000 }
+            ];
+            let selectedCodec = null;
+            for (const codec of codecs) {
+                if (MediaRecorder.isTypeSupported(codec.mime)) {
+                    selectedCodec = codec;
+                    break;
                 }
+            }
+            if (!selectedCodec) {
+                alert('Ошибка записи: Ваш браузер не поддерживает запись видео в форматах MP4 или WebM. Попробуйте использовать последнюю версию Chrome, Firefox или Edge.');
+                return;
+            }
+            if (!isRecording) {
                 if (!autoAnimation) {
                     toggleAutoAnimation();
                 }
                 recordedChunks = [];
                 scope.domElement.width = RECORDING_PX;
                 scope.domElement.height = RECORDING_PX;
-                const stream = scope.domElement.captureStream(30);
+                scope.resizeHandler();
                 try {
+                    const stream = scope.domElement.captureStream(30);
                     mediaRecorder = new MediaRecorder(stream, {
-                        mimeType: mimeType,
-                        videoBitsPerSecond: 5000000
+                        mimeType: selectedCodec.mime,
+                        videoBitsPerSecond: selectedCodec.bits
                     });
                     mediaRecorder.ondataavailable = (event) => {
                         if (event.data.size > 0) {
@@ -540,10 +515,24 @@
                     };
                     mediaRecorder.onerror = (event) => {
                         console.error('MediaRecorder error:', event.error);
-                        alert(`Ошибка записи видео: ${event.error.message}. Пожалуйста, проверьте настройки браузера и убедитесь, что используется поддерживаемый формат (WEBM). Попробуйте использовать Chrome или Firefox для лучшей совместимости.`);
+                        let errorMessage = 'Ошибка записи видео: ';
+                        switch (event.error.name) {
+                            case 'NotSupportedError':
+                                errorMessage += `Формат ${selectedCodec.ext.toUpperCase()} не поддерживается. Попробуйте другой браузер (Chrome, Firefox, Edge).`;
+                                break;
+                            case 'SecurityError':
+                                errorMessage += 'Невозможно записать видео из-за ограничений безопасности (возможно, изображение загружено с неподдерживаемого источника).';
+                                break;
+                            case 'InvalidStateError':
+                                errorMessage += 'Запись не может быть начата из-за неправильного состояния рекордера.';
+                                break;
+                            default:
+                                errorMessage += `Неизвестная ошибка: ${event.error.message}`;
+                        }
+                        alert(errorMessage);
                         stopRecording();
                     };
-                    mediaRecorder.start(1000);
+                    mediaRecorder.start();
                     isRecording = true;
                     recordBtn.html(`
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -556,11 +545,20 @@
                     recordTimerId = setInterval(updateRecordTimer, 1000);
                 } catch (e) {
                     console.error('Failed to start recording:', e);
-                    alert(`Не удалось начать запись: ${e.message}. Формат WEBM может не поддерживаться. Пожалуйста, используйте Chrome или Firefox и проверьте настройки браузера.`);
+                    alert(`Не удалось начать запись: ${e.message}. Убедитесь, что изображения загружены локально или с серверов, поддерживающих CORS. Попробуйте использовать Chrome, Firefox или Edge.`);
                 }
             } else {
+                stopRecording();
+            }
+            if (window.innerWidth <= 768) toggleMenu();
+        }
+
+        // Stop recording
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
                 mediaRecorder.stop();
                 isRecording = false;
+                const recordBtn = $("#recordBtn");
                 recordBtn.html(`
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
@@ -569,7 +567,6 @@
                 `);
                 recordBtn.removeClass("active");
             }
-            if (window.innerWidth <= 768) toggleMenu();
         }
 
         // Download recorded video
@@ -578,13 +575,12 @@
                 alert('Нет записанного видео для скачивания!');
                 return;
             }
-            const mimeType = 'video/webm';
-            const fileExtension = 'webm';
-            const blob = new Blob(recordedChunks, { type: mimeType });
+            const selectedCodec = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.4D401E') ? { mime: 'video/mp4', ext: 'mp4' } : { mime: 'video/webm', ext: 'webm' };
+            const blob = new Blob(recordedChunks, { type: selectedCodec.mime });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `калейдоскоп.${fileExtension}`;
+            link.download = `калейдоскоп.${selectedCodec.ext}`;
             link.click();
             URL.revokeObjectURL(url);
             recordedChunks = [];
@@ -595,20 +591,36 @@
         // Auto change picture
         setInterval(changePicture, 6000);
 
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
         // Mouse and touch move handler
         function handleMove(event) {
             if (!autoAnimation) {
                 const isTouch = event.type === 'touchmove';
                 const clientX = isTouch ? event.touches[0].clientX : event.pageX;
                 const clientY = isTouch ? event.touches[0].clientY : event.pageY;
-                const factorx = clientX / $(window).width();
-                const factory = clientY / $(window).height();
+                const factorx = clientX / window.innerWidth;
+                const factory = clientY / window.innerHeight;
                 scope.angleTarget = factorx * sensitivity;
                 scope.zoomTarget = (1.0 + 0.5 * factory) * sensitivity;
+                scope.needsRedraw = true;
             }
         }
-        $(window).on('mousemove', handleMove);
-        $(window).on('touchmove', handleMove);
+
+        const debouncedHandleMove = debounce(handleMove, 50);
+        $(window).on('mousemove', debouncedHandleMove);
+        $(window).on('touchmove', debouncedHandleMove);
 
         // Resize handler
         const resizeHandler = function() {
@@ -621,7 +633,8 @@
             }
         };
 
-        $(window).resize(resizeHandler);
+        const debouncedResizeHandler = debounce(resizeHandler, 100);
+        $(window).resize(debouncedResizeHandler);
         $(window).resize();
 
         container.click(changePicture);

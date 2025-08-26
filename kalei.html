@@ -312,11 +312,10 @@
             $('.left-panel').toggleClass('hidden');
         }
 
-        // Optimize image loading
+        // Optimize image loading for local files
         async function loadImage(src) {
             return new Promise((resolve, reject) => {
                 const img = new Image();
-                img.crossOrigin = "anonymous"; // Request CORS-compliant image
                 img.src = src;
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
@@ -330,12 +329,8 @@
                     }
                     canvas.width = width;
                     canvas.height = height;
-                    try {
-                        ctx.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.8));
-                    } catch (e) {
-                        reject(new Error('Не удалось обработать изображение из-за ограничений CORS: сервер не предоставил необходимые заголовки. Попробуйте загрузить локальное изображение или используйте сервер с поддержкой CORS.'));
-                    }
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.8));
                 };
                 img.onerror = () => reject(new Error('Не удалось загрузить изображение: ' + src));
             });
@@ -346,14 +341,21 @@
             const url = $("#image-url").val().trim();
             if (url) {
                 try {
-                    const optimizedSrc = await loadImage(url);
-                    images.push(optimizedSrc);
+                    // Attempt to load the image to check if it works
+                    const img = new Image();
+                    img.crossOrigin = "anonymous";
+                    img.src = url;
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = () => reject(new Error('Не удалось загрузить изображение: сервер не поддерживает CORS или изображение недоступно.'));
+                    });
+                    images.push(url);
                     updateImageList();
                     if (images.length === 1) changePicture();
                     $("#image-url").val("");
                     if (window.innerWidth <= 768) toggleMenu();
                 } catch (error) {
-                    alert(`Ошибка загрузки изображения по URL: ${error.message}`);
+                    alert(`Ошибка загрузки изображения по URL: ${error.message} Попробуйте загрузить локальное изображение.`);
                 }
             }
         }

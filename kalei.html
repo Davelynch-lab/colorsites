@@ -288,6 +288,7 @@
         const container = $("#kaleidoscope-container");
         const scope = new Graphemescope(container[0]);
         let images = [];
+        let loadedImages = []; // Store loaded Image objects
         let index = 0;
         let autoAnimation = false;
         let animationFrameId;
@@ -317,8 +318,18 @@
             const url = $("#image-url").val().trim();
             if (url) {
                 images.push(url);
-                updateImageList();
-                if (images.length === 1) changePicture();
+                const img = new Image();
+                img.src = url;
+                img.onload = function() {
+                    loadedImages.push(img);
+                    updateImageList();
+                    if (images.length === 1) changePicture();
+                };
+                img.onerror = function() {
+                    alert("Ошибка загрузки изображения: Не удалось загрузить изображение по URL. Убедитесь, что URL корректен.");
+                    images.pop(); // Remove invalid URL
+                    updateImageList();
+                };
                 $("#image-url").val("");
                 if (window.innerWidth <= 768) toggleMenu();
             }
@@ -334,13 +345,26 @@
                 const file = files[i];
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    images.push(e.target.result);
-                    loaded++;
-                    if (loaded === total) {
-                        updateImageList();
-                        if (images.length === total) changePicture();
-                        if (window.innerWidth <= 768) toggleMenu();
-                    }
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function() {
+                        images.push(e.target.result);
+                        loadedImages.push(img);
+                        loaded++;
+                        if (loaded === total) {
+                            updateImageList();
+                            if (images.length === total) changePicture();
+                            if (window.innerWidth <= 768) toggleMenu();
+                        }
+                    };
+                    img.onerror = function() {
+                        alert("Ошибка загрузки файла: Не удалось прочитать файл " + file.name);
+                        loaded++;
+                        if (loaded === total) {
+                            updateImageList();
+                            if (window.innerWidth <= 768) toggleMenu();
+                        }
+                    };
                 };
                 reader.onerror = function() {
                     alert("Ошибка загрузки файла: Не удалось прочитать файл " + file.name);
@@ -358,6 +382,7 @@
         // Delete image
         function deleteImage(idx) {
             images.splice(idx, 1);
+            loadedImages.splice(idx, 1);
             if (index >= images.length) index = 0;
             updateImageList();
             if (images.length > 0) changePicture();
@@ -385,8 +410,8 @@
 
         // Change picture
         function changePicture() {
-            if (images.length > 0) {
-                scope.setImage(images[index]);
+            if (images.length > 0 && loadedImages.length > index) {
+                scope.setImage(loadedImages[index]);
                 index = (index + 1) % images.length;
             }
         }
@@ -463,18 +488,23 @@
             }
         }
 
-        // Check if current image is CORS-safe
-        function isImageCorsSafe(imgSrc) {
-            return new Promise((resolve) => {
-                if (imgSrc.startsWith('data:')) {
-                    resolve(true); // Data URLs are safe
-                    return;
+        // Convert image to CORS-safe data URL
+        function makeImageCorsSafe(img) {
+            return new Promise((resolve, reject) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                try {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const safeImg = new Image();
+                    safeImg.src = dataUrl;
+                    safeImg.onload = () => resolve(safeImg);
+                    safeImg.onerror = () => reject(new Error('Не удалось создать CORS-безопасное изображение'));
+                } catch (e) {
+                    reject(e);
                 }
-                const img = new Image();
-                img.crossOrigin = "anonymous";
-                img.src = imgSrc;
-                img.onload = () => resolve(true);
-                img.onerror = () => resolve(false);
             });
         }
 
@@ -503,11 +533,15 @@
                 return;
             }
             if (!isRecording) {
-                // Check if all images are CORS-safe
-                const corsChecks = images.map(src => isImageCorsSafe(src));
-                const corsResults = await Promise.all(corsChecks);
-                if (corsResults.some(result => !result)) {
-                    alert('Ошибка записи: Некоторые изображения не поддерживают CORS. Пожалуйста, используйте локальные изображения или загрузите изображения с серверов, поддерживающих CORS, чтобы записать видео.');
+                // Convert all loaded images to CORS-safe versions
+                try {
+                    const safeImages = await Promise.all(loadedImages.map(img => makeImageCorsSafe(img)));
+                    loadedImages = safeImages; // Replace with CORS-safe images
+                    if (images.length > 0) {
+                        scope.setImage(loadedImages[index % loadedImages.length]);
+                    }
+                } catch (e) {
+                    alert(`Не удалось подготовить изображения для записи: ${e.message}. Попробуйте использовать локальные изображения.`);
                     return;
                 }
                 if (!autoAnimation) {
@@ -543,7 +577,7 @@
                                 errorMessage += `Формат ${selectedCodec.ext.toUpperCase()} не поддерживается. Попробуйте другой браузер (Chrome, Firefox, Edge).`;
                                 break;
                             case 'SecurityError':
-                                errorMessage += 'Невозможно записать видео из-за ограничений безопасности (возможно, изображение загружено с неподдерживаемого источника).';
+                                errorMessage += 'Невозможно записать видео из-за ограничений безопасности. Попробуйте использовать локальные изображения.';
                                 break;
                             case 'InvalidStateError':
                                 errorMessage += 'Запись не может быть начата из-за неправильного состояния рекордера.';
@@ -567,7 +601,7 @@
                     recordTimerId = setInterval(updateRecordTimer, 1000);
                 } catch (e) {
                     console.error('Failed to start recording:', e);
-                    alert(`Не удалось начать запись: ${e.message}. Убедитесь, что изображения загружены локально или с серверов, поддерживающих CORS. Попробуйте использовать Chrome, Firefox или Edge.`);
+                    alert(`Не удалось начать запись: ${e.message}. Попробуйте использовать Chrome, Firefox или Edge.`);
                 }
             } else {
                 stopRecording();
@@ -613,19 +647,6 @@
         // Auto change picture
         setInterval(changePicture, 6000);
 
-        // Debounce function
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
         // Mouse and touch move handler
         function handleMove(event) {
             if (!autoAnimation) {
@@ -640,12 +661,11 @@
             }
         }
 
-        const debouncedHandleMove = debounce(handleMove, 50);
-        $(window).on('mousemove', debouncedHandleMove);
-        $(window).on('touchmove', debouncedHandleMove);
+        $(window).on('mousemove', handleMove);
+        $(window).on('touchmove', handleMove);
 
         // Resize handler
-        const resizeHandler = function() {
+        function resizeHandler() {
             if (!isRecording) {
                 const canvasWidth = container[0].clientWidth;
                 const canvasHeight = container[0].clientHeight;
@@ -653,10 +673,9 @@
                 scope.domElement.height = canvasHeight;
                 scope.resizeHandler();
             }
-        };
+        }
 
-        const debouncedResizeHandler = debounce(resizeHandler, 100);
-        $(window).resize(debouncedResizeHandler);
+        $(window).on('resize', resizeHandler);
         $(window).resize();
 
         container.click(changePicture);

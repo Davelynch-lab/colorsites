@@ -3,1240 +3,647 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Генератор калейдоскопов</title>
+    <title>Калейдоскоп Генератор 3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
         body {
-            background: linear-gradient(135deg, #6b7280, #4c1d95);
+            background: linear-gradient(135deg, #4b6cb7, #182848);
             min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            color: #e5e7eb;
         }
-        canvas {
-            background-color: white;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
+        .container {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+            max-width: 100%;
+            margin: 0 auto;
         }
-        .color-btn {
+        .left-panel {
             width: 100%;
-            height: 36px;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            transition: transform 0.2s;
-        }
-        .color-btn:hover {
-            transform: scale(1.05);
-        }
-        .delete-btn {
-            background: #e74c3c;
-            color: white;
-            padding: 6px;
-            border-radius: 6px;
-            font-size: 12px;
-            transition: background 0.3s;
-        }
-        .delete-btn:hover {
-            background: #c0392b;
-        }
-        #previewCanvas {
-            max-width: 300px;
-            width: 100%;
-            aspect-ratio: 1/1;
-        }
-        #fullCanvas {
-            max-width: 800px;
-            width: 100%;
-            aspect-ratio: 1/1;
-        }
-        .card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        #backgroundColorPreview {
-    width: 100%;
-    height: 36px;
-    border: 2px solid #e5e7eb;
-    border-radius: 6px;
-}
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-        }
-        .custom-range::-webkit-slider-thumb {
-            background: #7c3aed;
-        }
-        .custom-range::-moz-range-thumb {
-            background: #7c3aed;
-        }
-        #imageModal {
-            display: none;
+            max-width: 320px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            padding: 1.5rem;
+            margin: 30px;
+            overflow-y: hidden;
+            z-index: 1000;
+            transition: transform 0.3s ease, left 0.3s ease;
             position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 50;
+            top: 0;
+            left: 0;
+            height: calc(100% - 60px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        .left-panel.hidden {
+            left: -100%;
+        }
+        .right-panel {
+            flex: 1;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: 380px;
+        }
+        #kaleidoscope-container {
+            width: 100%;
+            max-width: 1000px;
+            aspect-ratio: 1/1;
+            background-color: white;
+            border: 3px solid #6ee7b7;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        #kaleidoscope-container canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid #6ee7b7;
+            border-radius: 8px;
+            color: #e5e7eb;
+            font-size: 0.9rem;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]::placeholder {
+            color: #a1a1aa;
+        }
+        input[type="text"]:focus, input[type="file"]:focus {
+            border-color: #22d3ee;
+            outline: none;
+        }
+        button {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(45deg, #ec4899, #3b82f6);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1rem;
+            gap: 0.5rem;
+            transition: transform 0.3s, background 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
-        #imageModal.show {
-            display: flex;
+        button:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(45deg, #f9a8d4, #60a5fa);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
         }
-        details summary {
-            cursor: pointer;
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #4c1d95;
+        .action-btn {
+            margin: 0.75rem 0;
+        }
+        .delete-btn {
+            background: #ef4444;
             padding: 0.5rem;
+            font-size: 0.85rem;
+            box-shadow: none;
         }
-        details summary:hover {
-            color: #7c3aed;
+        .delete-btn:hover {
+            background: #b91c1c;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
-        details p {
-            margin-top: 0.5rem;
-            color: #374151;
+        .image-list {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+            overflow-y: auto;
+            max-height: 200px;
         }
-        #animateBtn, #recordBtn {
-            background: linear-gradient(45deg, #7c3aed, #4c1d95);
-            color: white;
-            transition: transform 0.3s, background 0.3s;
+        .image-list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e5e7eb;
+            font-size: 0.9rem;
         }
-        #animateBtn:hover, #recordBtn:hover {
-            transform: scale(1.05);
-            background: linear-gradient(45deg, #9f67ff, #6b46c1);
+        .image-list li span {
+            flex: 1;
+            word-break: break-all;
         }
-        #animateBtn.active, #recordBtn.active {
-            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        .slider-group {
+            margin-bottom: 1.5rem;
+        }
+        .slider-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #e5e7eb;
+            font-weight: 600;
+        }
+        input[type="range"] {
+            width: 100%;
+            accent-color: #6ee7b7;
         }
         .action-buttons {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 0.75rem;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
         }
-        .action-buttons button {
-            flex: 1;
-            padding: 0.75rem;
+        #recordBtn.active {
+            background: linear-gradient(45deg, #ef4444, #b91c1c);
+        }
+        #recordTimer {
+            text-align: center;
+            color: #e5e7eb;
+            font-weight: 600;
             font-size: 0.9rem;
         }
+        .toggle-menu {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 2000;
+            background: linear-gradient(45deg, #ec4899, #3b82f6);
+            padding: 0.75rem;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        @media (max-width: 768px) {
+            .left-panel {
+                max-width: 85%;
+                margin: 0;
+                height: 100%;
+            }
+            .right-panel {
+                padding: 0.5rem;
+                margin-left: 0;
+            }
+            #kaleidoscope-container {
+                max-width: 100%;
+            }
+            .container {
+                flex-direction: column;
+            }
+            .left-panel.hidden + .right-panel .toggle-menu {
+                display: block;
+            }
+            .image-list {
+                max-height: 150px;
+            }
+        }
+        @media (min-width: 769px) {
+            .toggle-menu {
+                display: none;
+            }
+            .left-panel {
+                position: static;
+                height: auto;
+                max-height: 100vh;
+            }
+        }
+        .hd, .tx, .sh, .overlay {
+            display: none;
+        }
     </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://rawgithub.com/Grapheme/graphemescope/master/lib/graphemescope.js"></script>
 </head>
-<body class="font-sans text-gray-900">
-    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-7xl">
-        <details class="card p-4 rounded-xl shadow-lg mb-6">
-            <summary>Инструкции</summary>
-            <p>Добро пожаловать в Генератор калейдоскопов! Следуйте этим шагам:</p>
-            <ul class="list-disc pl-5 mt-2">
-                <li><strong>Выбор узора:</strong> Выберите тип узора (Линии, Точки, Фигуры, Смешанный, Ветви, Спираль, Орбиты, Точки в Фигуры).</li>
-                <li><strong>Настройка параметров:</strong> Регулируйте количество элементов (100–1000), секторов (3–40) и скорость анимации (0.05–0.5).</li>
-                <li><strong>Палитра:</strong> Добавляйте до 20 цветов, удаляйте или изменяйте их.</li>
-                <li><strong>Генерация:</strong> Нажмите "Сгенерировать" для создания узора.</li>
-                <li><strong>Анимация:</strong> Нажмите "Анимировать" для запуска плавной анимации. Повторное нажатие останавливает.</li>
-                <li><strong>Запись видео:</strong> Нажмите "Старт/Стоп запись" для записи анимации. Нажмите "Скачать видео" для сохранения в MP4.</li>
-                <li><strong>Просмотр:</strong> Нажмите "Открыть полное изображение" для просмотра анимированного узора.</li>
-                <li><strong>Сохранение:</strong> Нажмите "Сохранить изображение" для скачивания PNG (статичное изображение).</li>
-                <li><strong>Возврат:</strong> Нажмите "← Вернуться" для возврата на главную.</li>
-            </ul>
-        </details>
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-white mb-8 drop-shadow-lg">Генератор калейдоскопов</h1>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="space-y-6">
-                <div class="card p-6 rounded-xl shadow-lg">
-                    <h2 class="text-xl font-semibold mb-4 text-indigo-700">Настройки узора</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-1 text-gray-700">Тип узора</label>
-                            <select id="modeCombo" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500" title="Выберите тип узора">
-                                <option>Линии</option>
-                                <option>Точки</option>
-                                <option>Фигуры</option>
-                                <option>Смешанный</option>
-                                <!-- <option>Ветви</option> -->
-                                <option>Спираль</option>
-                                <option>Орбиты</option>
-                                <option>Точки в Фигуры</option>
-                                <option>Точки в Смешанный</option>
-                                <option value="Crystal"><a href="kalei.html">Кристаллическое (избранное)</a></option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1 text-gray-700">Количество элементов: <span id="elementValue" class="font-bold">300</span></label>
-                            <input type="range" id="elementSlider" min="100" max="1000" value="300" class="w-full custom-range" title="Количество элементов">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1 text-gray-700">Количество секторов: <span id="slicesValue" class="font-bold">13</span></label>
-                            <input type="range" id="slicesSlider" min="3" max="40" value="13" class="w-full custom-range" title="Количество секторов">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1 text-gray-700">Скорость анимации: <span id="animationSpeedValue" class="font-bold">0.1</span></label>
-                            <input type="range" id="animationSpeedSlider" min="0.05" max="0.5" step="0.01" value="0.1" class="w-full custom-range" title="Скорость анимации">
-                        </div>
-                    </div>
-                </div>
-                <div class="card p-6 rounded-xl shadow-lg">
-                    <h2 class="text-xl font-semibold mb-4 text-indigo-700">Палитра цветов</h2>
-                    <div class="overflow-x-auto">
-                        <table id="paletteTable" class="w-full border-collapse mb-4">
-                            <thead>
-                                <tr>
-                                    <th class="border-b-2 p-3 text-left text-gray-700 w-16">Ключ</th>
-                                    <th class="border-b-2 p-3 text-left text-gray-700">Цвет</th>
-                                    <th class="border-b-2 p-3 text-left text-gray-700 w-24">Действие</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <button id="addColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors" title="Добавить цвет">Добавить цвет</button>
-                        <button id="removeColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors" title="Удалить последний цвет">Удалить последний</button>
-                        <button id="changeBackgroundColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors" title="Изменить цвет фона">Выбрать цвет фона</button>
-                    </div>
-
-                </div>
+<body>
+    <div class="container">
+        <button class="toggle-menu" onclick="toggleMenu()">☰</button>
+        <div class="left-panel hidden">
+            <button onclick="goBack()" title="Назад" class="action-btn">
+                Назад
+            </button>
+            <h2 class="text-lg font-bold mb-4 text-cyan-300">Калейдоскоп Студия</h2>
+            <div class="input-group">
+                <input type="text" id="image-url" placeholder="Введите URL изображения" class="focus:ring-2 focus:ring-cyan-400">
+                <button onclick="addImageUrl()" title="Добавить URL" class="action-btn">
+                    <p style="margin: 10px;">Добавить фото</p>
+                </button>
             </div>
-            <div class="space-y-6">
-                <div class="card p-6 rounded-xl shadow-lg flex justify-center items-center">
-                    <div>
-                        <h2 class="text-xl font-semibold mb-4 text-indigo-700 text-center">Предпросмотр</h2>
-                        <canvas id="previewCanvas" class="mx-auto"></canvas>
-                    </div>
-                </div>
-                <div class="card p-6 rounded-xl shadow-lg">
-                    <div class="action-buttons">
-                        <button id="generateBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Создать узор">Сгенерировать</button>
-                        <button id="animateBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Запустить/остановить анимацию">Анимировать</button>
-                        <button id="recordBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Начать/остановить запись видео">Старт запись</button>
-                        <button id="downloadVideoBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Скачать записанное видео" disabled>Скачать видео</button>
-                        <button id="viewBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Открыть узор">Открыть полное изображение</button>
-                        <button id="saveBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Сохранить узор">Сохранить изображение</button>
-                    </div>
-                </div>
+            <div class="input-group">
+                <input type="file" id="image-upload" accept="image/*" multiple>
+                <button onclick="addImageFiles()" title="Загрузить изображения" class="action-btn">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    Загрузить изображения
+                </button>
             </div>
+            <div class="slider-group">
+                <label for="sensitivity">Скорость анимации: <span id="sensitivity-value">1.0</span></label>
+                <input type="range" id="sensitivity" min="0.1" max="2.0" step="0.1" value="1.0" class="custom-range" title="Скорость анимации">
+            </div>
+            <div class="action-buttons">
+                <button onclick="toggleAutoAnimation()" id="animateBtn" title="Переключить анимацию">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.2A1 1 0 0010 9.768v4.464a1 1 0 001.555.832l3.197-2.2a1 1 0 000-1.664z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Переключить анимацию
+                </button>
+                <button onclick="startStopRecording()" id="recordBtn" title="Начать/остановить запись">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                    </svg>
+                    Начать запись
+                </button>
+                <button onclick="downloadVideo()" id="downloadVideoBtn" title="Скачать видео" disabled>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Скачать видео
+                </button>
+            </div>
+            <div id="recordTimer">Запись: 00:00</div>
+            <h3 class="text-base font-semibold mt-4 mb-2 text-cyan-300">Изображения</h3>
+            <ul id="image-list" class="image-list"></ul>
         </div>
-        <button id="home" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors" style="margin-top: 20px;" title="Вернуться">← Вернуться</button>
-        <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center p-4 z-50">
-            <div class="bg-white p-6 rounded-xl max-w-[90vw] max-h-[90vh] overflow-auto">
-                <canvas id="fullCanvas" class="mx-auto"></canvas>
-                <div class="text-center mt-4">
-                    <button id="closeModalBtn" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors" title="Закрыть">Закрыть</button>
-                </div>
-            </div>
+        <div class="right-panel">
+            <div id="kaleidoscope-container"></div>
         </div>
     </div>
-
     <script>
-       const DPI = 300;
-const CM_TO_INCH = 1 / 2.54;
-const MAIN_CM = 15;
-const MAIN_PX = Math.round(MAIN_CM * CM_TO_INCH * DPI);
-const CANVAS_PX = MAIN_PX;
-const MOBILE_RECORDING_PX = 1280;
-const MAX_RECORDING_DURATION = 60;
-let ANIMATION_SPEED = 0.1;
-let backgroundColor = [255, 255, 255, 1]; // По умолчанию белый цвет фона
+        (function(){var a,b;b=function(){return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||function(a){return window.setTimeout(a,1e3/30)}}(),window.Graphemescope=a=function(){function a(a){var c=this;this.parentElement=null!=a?a:window.document.body,this.enabled=!0,this.radiusFactor=1,this.zoomFactor=1,this.angleFactor=0,this.zoomTarget=1.2,this.angleTarget=.8,this.easeEnabled=!0,this.ease=.1,null==this.domElement&&(this.domElement=document.createElement("canvas")),null==this.ctx&&(this.ctx=this.domElement.getContext("2d")),this.alphaFactor=1,this.alphaTarget=1,this.patternCache=null,this.patternProxyCache=null,this.parentElement.appendChild(this.domElement),this.oldResizeHandler=function(){},null!==window.onresize&&(this.oldResizeHandler=window.onresize),window.onresize=function(){return c.resizeHandler()},this.resizeHandler(),b(function(){return c.animationFrame()})}return a.prototype.animationFrame=function(){var a=this;return b(function(){return a.animationFrame()}),this.enabled?(this.update(),this.draw()):void 0},a.prototype.resizeHandler=function(){return this.width=this.domElement.width=this.parentElement.offsetWidth,this.height=this.domElement.height=this.parentElement.offsetHeight,this.radius=.5*this.radiusFactor*Math.min(this.width,this.height),this.radiusHeight=.5*Math.sqrt(3)*this.radius,this.oldResizeHandler()},a.prototype.update=function(){return this.easeEnabled?(this.angleFactor+=(this.angleTarget-this.angleFactor)*this.ease,this.zoomFactor+=(this.zoomTarget-this.zoomFactor)*this.ease,this.alphaFactor+=(this.alphaTarget-this.alphaFactor)*this.ease):(this.angleFactor=this.angleTarget,this.zoomFactor=this.zoomTarget,this.alphaFactor=this.alphaTarget)},a.prototype.drawImage=function(a){var b,c;return this.ctx.save(),b=2/3*this.radiusHeight,c=this.zoomFactor*b/(.5*Math.min(a.width,a.height)),this.ctx.translate(0,b),this.ctx.scale(c,c),this.ctx.rotate(2*this.angleFactor*Math.PI),this.ctx.translate(-.5*a.width,-.5*a.height),this.ctx.fill(),this.ctx.restore()},a.prototype.drawCell=function(a){var b,c,d;for(d=[],b=c=0;6>c;b=++c)this.ctx.save(),this.ctx.rotate(2*b*Math.PI/6),this.ctx.scale([-1,1][b%2],1),this.ctx.beginPath(),this.ctx.moveTo(0,0),this.ctx.lineTo(-.5*this.radius,1*this.radiusHeight),this.ctx.lineTo(.5*this.radius,1*this.radiusHeight),this.ctx.closePath(),this.drawImage(a),d.push(this.ctx.restore());return d},a.prototype.drawLayer=function(a){var b,c,d,e,f,g,h,i,j,k,l,m,n=window.innerWidth<=768?2:4,o=window.innerWidth<=768?3:5;for(this.ctx.save(),this.ctx.translate(.5*this.width,.5*this.height),f=Math.ceil(.5*this.height/this.radiusHeight/n),c=Math.ceil(.5*this.width/(3*this.radius)/o),d=function(){l=[];for(var a=-c;c>=-c?c>=a:a>=c;c>=-c?a++:a--)l.push(a);return l}.apply(this),g=function(){m=[];for(var a=-f;f>=-f?f>=a:a>=f;f>=-f?a++:a--)m.push(a);return m}.apply(this),h=0,j=g.length;j>h;h++){for(e=g[h],this.ctx.save(),this.ctx.translate(0,this.radiusHeight*e),Math.abs(e)%2&&this.ctx.translate(1.5*this.radius,0),i=0,k=d.length;k>i;i++)b=d[i],this.ctx.save(),this.ctx.translate(3*b*this.radius,0),this.drawCell(a),this.ctx.restore();this.ctx.restore()}return this.ctx.restore()},a.prototype.draw=function(){this.ctx.clearRect(0,0,this.width,this.height);return null!=this.imageProxy&&(this.ctx.fillStyle=this.patternProxyCache,this.ctx.globalAlpha=1-this.alphaFactor,this.drawLayer(this.imageProxy)),null!=this.image?(this.ctx.fillStyle=this.patternCache,this.ctx.globalAlpha=this.alphaFactor,this.drawLayer(this.image)):void 0},a.prototype.setImageDirect=function(a){return null!=this.image&&(this.imageProxy=this.image,this.patternProxyCache=this.patternCache),this.image=a,this.patternCache=this.ctx.createPattern(this.image,"repeat"),this.alphaFactor=0},a.prototype.setImage=function(a){var b,c=this;return"string"==typeof a?(b=new Image,b.src=a,b.onload=function(){return c.setImageDirect(b)}):this.setImageDirect(a)},a}()}).call(this);
 
-const DEFAULT_PALETTE = {
-    '1': [245, 245, 220, 1],
-    '2': [0, 0, 0, 1],
-    '3': [255, 255, 0, 1],
-    '4': [255, 0, 255, 1]
-};
+        // Initialize kaleidoscope
+        const container = $("#kaleidoscope-container");
+        const scope = new Graphemescope(container[0]);
+        let images = [];
+        let index = 0;
+        let autoAnimation = false;
+        let animationFrameId;
+        let sensitivity = 1.0;
+        let time = 0;
+        let isRecording = false;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let recordTimerId = null;
+        let recordStartTime = null;
+        const MAX_RECORDING_DURATION = 60;
+        let RECORDING_PX = window.innerWidth <= 768 ? 720 : 1280;
+        let lastAngleTarget = 0;
+        let lastZoomTarget = 1.2;
 
-const AVAILABLE_COLORS = [
-    [245, 245, 220, 1],
-    [255, 255, 0, 1],
-    [0, 0, 0, 1],
-    [255, 0, 255, 1],
-    [144, 238, 144, 1]
-];
-
-let colorIndex = 0;
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-class KaleidoGenerator {
-    constructor(size_px, palette, mode = 'Lines', sectors = 12, elements = 300, slices = 13) {
-        this.size = size_px;
-        this.palette = Object.values(palette);
-        this.mode = mode;
-        this.sectors = sectors;
-        this.elements = Math.min(elements, 500);
-        this.slices = slices;
-        this.branch_settings = {
-            size: 150,
-            angle: 0.4,
-            scale: 0.67,
-            iterations: Math.max(1, Math.floor(elements / 100)),
-            offset: 0,
-            spiral_density: 0.05,
-        };
-        this.elementsData = [];
-        this.initElements();
-    }
-
-    initElements() {
-        this.elementsData = [];
-        const angle = 360 / this.sectors;
-        if (this.mode === 'Lines') {
-            for (let i = 0; i < this.elements; i++) {
-                this.elementsData.push({
-                    r1: Math.random(),
-                    theta1: (Math.random() * angle - angle / 2) * Math.PI / 180,
-                    r2: Math.random(),
-                    theta2: (Math.random() * angle - angle / 2) * Math.PI / 180,
-                    colorIdx: Math.floor(Math.random() * this.palette.length),
-                    lineWidth: Math.floor(Math.random() * 4) + 1
-                });
-            }
-        } else if (this.mode === 'Dots') {
-            for (let i = 0; i < this.elements; i++) {
-                this.elementsData.push({
-                    r: Math.random(),
-                    theta: (Math.random() * angle - angle / 2) * Math.PI / 180,
-                    colorIdx: Math.floor(Math.random() * this.palette.length),
-                    size_dot: Math.random() * 6 + 2
-                });
-            }
-        } else if (this.mode === 'Shapes') {
-            for (let i = 0; i < this.elements; i++) {
-                this.elementsData.push({
-                    r: Math.random(),
-                    theta: (Math.random() * angle - angle / 2) * Math.PI / 180,
-                    colorIdx: Math.floor(Math.random() * this.palette.length),
-                    size_sq: Math.random() * 15 + 5
-                });
-            }
-        } else if (this.mode === 'Mixed') {
-            for (let i = 0; i < this.elements; i++) {
-                const type = ['Lines', 'Dots', 'Shapes'][Math.floor(Math.random() * 3)];
-                if (type === 'Lines') {
-                    this.elementsData.push({
-                        type: 'Lines',
-                        r1: Math.random(),
-                        theta1: (Math.random() * angle - angle / 2) * Math.PI / 180,
-                        r2: Math.random(),
-                        theta2: (Math.random() * angle - angle / 2) * Math.PI / 180,
-                        colorIdx: Math.floor(Math.random() * this.palette.length),
-                        lineWidth: Math.floor(Math.random() * 4) + 1
-                    });
-                } else if (type === 'Dots') {
-                    this.elementsData.push({
-                        type: 'Dots',
-                        r: Math.random(),
-                        theta: (Math.random() * angle - angle / 2) * Math.PI / 180,
-                        colorIdx: Math.floor(Math.random() * this.palette.length),
-                        size_dot: Math.random() * 6 + 2
-                    });
-                } else {
-                    this.elementsData.push({
-                        type: 'Shapes',
-                        r: Math.random(),
-                        theta: (Math.random() * angle - angle / 2) * Math.PI / 180,
-                        colorIdx: Math.floor(Math.random() * this.palette.length),
-                        size_sq: Math.random() * 15 + 5
-                    });
-                }
-            }
-        } else if (this.mode === 'Spiral') {
-            const spiral_count = Math.floor(this.elements / 10);
-            for (let i = 0; i < spiral_count; i++) {
-                this.elementsData.push({
-                    theta_start: (Math.random() * angle - angle / 2) * Math.PI / 180,
-                    color_idx: Math.floor(Math.random() * this.palette.length)
-                });
-            }
-        } else if (this.mode === 'Orbit') {
-            const diameter = this.size;
-            const a = 0.266746, b = 0.321596, c = 0.223138;
-            this.elementsData = [
-                { class: 'a', width: diameter * a, top: (diameter/2 - (diameter*a/2)) * 0.60, left: diameter/2 - (diameter*a/2), blink: 'blink-lightest', speed: 5*a, delay: 2*a },
-                { class: 'a', width: diameter * a, top: (diameter/2 - (diameter*a/2)) * 1.22, left: (diameter/2 - (diameter*a/2)) * 0.65, blink: 'blink-lightest', speed: 5*a, delay: 1*a },
-                { class: 'a', width: diameter * a, top: (diameter/2 - (diameter*a/2)) * 1.22, right: (diameter/2 - (diameter*a/2)) * 0.65, blink: 'blink-lightest', speed: 5*a, delay: 1*a },
-                { class: 'b', width: diameter * b, top: (diameter/2 - (diameter*b/2)) * 0.52, left: diameter*b/7, blink: 'blink-lightest', speed: 5*b, delay: 1*b },
-                { class: 'b', width: diameter * b, top: (diameter/2 - (diameter*b/2)) * 0.52, right: diameter*b/7, blink: 'blink-lightest', speed: 5*b, delay: 1*b },
-                { class: 'b', width: diameter * b, bottom: 0, left: diameter/2 - (diameter*b/2), blink: 'blink', speed: 5*b, delay: 2*b },
-                { class: 'c', width: diameter * c, top: diameter*c/15, left: diameter*c * 1.23, blink: 'blink-lightest', speed: 6*c, delay: 3*c },
-                { class: 'c', width: diameter * c, top: diameter*c/15, right: diameter*c * 1.23, blink: 'blink-lightest', speed: 6*c, delay: 2*c },
-                { class: 'c', width: diameter * c, bottom: diameter*c/2.3, left: diameter*c * 0.55, blink: 'blink-lightest', speed: 6*c, delay: 4*c },
-                { class: 'c', width: diameter * c, bottom: diameter*c * 1.3, left: diameter*c * 0.05, blink: 'blink-lightest', speed: 6*c, delay: 3*c },
-                { class: 'c', width: diameter * c, bottom: diameter*c/2.3, right: diameter*c * 0.55, blink: 'blink-lightest', speed: 6*c, delay: 2*c },
-                { class: 'c', width: diameter * c, bottom: diameter*c * 1.3, right: diameter*c * 0.05, blink: 'blink-lightest', speed: 6*c, delay: 3*c },
-                { class: 'center', width: diameter * a, top: diameter/2 - (diameter*a/2), left: diameter/2 - (diameter*a/2), blink: 'blink', speed: 3, delay: 0 },
-                { class: 'tile-cover', width: diameter, top: 0, left: 0, blink: 'blink', speed: 3, delay: 1 },
-                { class: 'tile-back', width: diameter, top: 0, left: 0, blink: 'blink', speed: 5, delay: 2 },
-            ];
-        } else if (this.mode === 'DotToShape') {
-            for (let i = 0; i < this.elements; i++) {
-                this.elementsData.push({
-                    r: Math.random(),
-                    theta: (Math.random() * angle - angle / 2) * Math.PI / 180,
-                    colorIdx: Math.floor(Math.random() * this.palette.length),
-                    size_dot: Math.random() * 6 + 2,
-                    size_sq: Math.random() * 15 + 5
-                });
-            }
-        } else if (this.mode === 'DotsToMixed') {
-            for (let i = 0; i < this.elements; i++) {
-                const type = ['Lines', 'Dots', 'Shapes'][Math.floor(Math.random() * 3)];
-                this.elementsData.push({
-                    r: Math.random(),
-                    theta: (Math.random() * angle - angle / 2) * Math.PI / 180,
-                    colorIdx: Math.floor(Math.random() * this.palette.length),
-                    size_dot: Math.random() * 6 + 2,
-                    type: type,
-                    r1: type === 'Lines' ? Math.random() : null,
-                    theta1: type === 'Lines' ? (Math.random() * angle - angle / 2) * Math.PI / 180 : null,
-                    r2: type === 'Lines' ? Math.random() : null,
-                    theta2: type === 'Lines' ? (Math.random() * angle - angle / 2) * Math.PI / 180 : null,
-                    lineWidth: type === 'Lines' ? Math.floor(Math.random() * 4) + 1 : null,
-                    size_sq: type === 'Shapes' ? Math.random() * 15 + 5 : null
-                });
-            }
+        // Debounce utility
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
         }
-    }
 
-    generate(canvas, animate = false, animationTime = 0) {
-        const ctx = canvas.getContext('2d');
-        canvas.width = this.size;
-        canvas.height = this.size;
-        ctx.fillStyle = `rgba(${backgroundColor[0]}, ${backgroundColor[1]}, ${backgroundColor[2]}, ${backgroundColor[3]})`;
-        ctx.fillRect(0, 0, this.size, this.size);
-        ctx.globalAlpha = animate ? 0.9 : 1.0;
-        const main = this._makeKaleidoSquare(animate, animationTime);
-        ctx.drawImage(main, 0, 0);
-        ctx.globalAlpha = 1.0;
-    }
-
-    _interpolateColor(color1, color2, factor) {
-        return [
-            Math.round(color1[0] * (1 - factor) + color2[0] * factor),
-            Math.round(color1[1] * (1 - factor) + color2[1] * factor),
-            Math.round(color1[2] * (1 - factor) + color2[2] * factor),
-            color1[3] * (1 - factor) + color2[3] * factor
-        ];
-    }
-
-    _makeTrianglifyPattern(width, height, t) {
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        const cell_size = 50;
-        for (let i = 0; i < width; i += cell_size) {
-            for (let j = 0; j < height; j += cell_size) {
-                const points = [
-                    [i, j],
-                    [i + cell_size, j],
-                    [i + cell_size, j + cell_size],
-                    [i, j + cell_size],
-                ];
-                const color1 = this.palette[Math.floor(Math.random() * this.palette.length)];
-                const color2 = this.palette[Math.floor(Math.random() * this.palette.length)];
-                const factor = t ? (Math.sin(t + i * 0.1 + j * 0.1) + 1) / 2 : 0;
-                ctx.fillStyle = `rgba(${this._interpolateColor(color1, color2, factor).join(',')})`;
-                ctx.beginPath();
-                ctx.moveTo(points[0][0], points[0][1]);
-                ctx.lineTo(points[1][0], points[1][1]);
-                ctx.lineTo(points[2][0], points[2][1]);
-                ctx.fill();
-                ctx.fillStyle = `rgba(${this._interpolateColor(color2, color1, factor).join(',')})`;
-                ctx.beginPath();
-                ctx.moveTo(points[0][0], points[0][1]);
-                ctx.lineTo(points[2][0], points[2][1]);
-                ctx.lineTo(points[3][0], points[3][1]);
-                ctx.fill();
-            }
+        // Go back to main.html
+        function goBack() {
+            window.location.href = 'main.html';
+            if (window.innerWidth <= 768) toggleMenu();
         }
-        return canvas;
-    }
 
-    _makeKaleidoSquare(animate, animationTime) {
-        const canvas = document.createElement('canvas');
-        canvas.width = this.size;
-        canvas.height = this.size;
-        const ctx = canvas.getContext('2d');
-        const radius = this.size / 2;
-        const angle = 360 / this.sectors;
-        const cx = radius, cy = radius;
-        const t = animate ? animationTime * ANIMATION_SPEED : 0;
-        const rotationOffset = Math.sin(t) * 0.4;
+        // Toggle menu for mobile
+        function toggleMenu() {
+            $('.left-panel').toggleClass('hidden');
+        }
 
-        if (this.mode === 'Lines') {
-            for (let i = 0; i < this.elementsData.length; i++) {
-                const data = this.elementsData[i];
-                const color = this.palette[data.colorIdx];
-                const nextColor = this.palette[(data.colorIdx + 1) % this.palette.length];
-                const colorFactor = (Math.sin(t + i * 0.3) + 1) / 2;
-                ctx.strokeStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
-                const thetaOffset = Math.sin(t + i * 0.3) * 0.4;
-                const x1 = cx + data.r1 * radius * Math.cos(data.theta1 + thetaOffset);
-                const y1 = cy + data.r1 * radius * Math.sin(data.theta1 + thetaOffset);
-                const x2 = cx + data.r2 * radius * Math.cos(data.theta2 + thetaOffset);
-                const y2 = cy + data.r2 * radius * Math.sin(data.theta2 + thetaOffset);
-                ctx.lineWidth = data.lineWidth * (1 + Math.sin(t + i * 0.3) * 0.8);
-                ctx.beginPath();
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
-                ctx.stroke();
-            }
-        } else if (this.mode === 'Dots') {
-            for (let i = 0; i < this.elementsData.length; i++) {
-                const data = this.elementsData[i];
-                const color = this.palette[data.colorIdx];
-                const nextColor = this.palette[(data.colorIdx + 1) % this.palette.length];
-                const colorFactor = (Math.sin(t + i * 0.3) + 1) / 2;
-                ctx.fillStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
-                const thetaOffset = Math.sin(t + i * 0.3) * 0.4;
-                const x = cx + data.r * radius * Math.cos(data.theta + thetaOffset);
-                const y = cy + data.r * radius * Math.sin(data.theta + thetaOffset);
-                const size_dot = data.size_dot * (1 + Math.sin(t + i * 0.3) * 0.8);
-                ctx.beginPath();
-                ctx.arc(x, y, size_dot, 0, 2 * Math.PI);
-                ctx.fill();
-            }
-        } else if (this.mode === 'Shapes') {
-            for (let i = 0; i < this.elementsData.length; i++) {
-                const data = this.elementsData[i];
-                const color = this.palette[data.colorIdx];
-                const nextColor = this.palette[(data.colorIdx + 1) % this.palette.length];
-                const colorFactor = (Math.sin(t + i * 0.3) + 1) / 2;
-                ctx.fillStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
-                const thetaOffset = Math.sin(t + i * 0.3) * 0.4;
-                const x = cx + data.r * radius * Math.cos(data.theta + thetaOffset);
-                const y = cy + data.r * radius * Math.sin(data.theta + thetaOffset);
-                const size_sq = data.size_sq * (1 + Math.sin(t + i * 0.3) * 0.8);
-                ctx.fillRect(x - size_sq, y - size_sq, size_sq * 2, size_sq * 2);
-            }
-        } else if (this.mode === 'Mixed') {
-            for (let i = 0; i < this.elementsData.length; i++) {
-                const data = this.elementsData[i];
-                const color = this.palette[data.colorIdx];
-                const nextColor = this.palette[(data.colorIdx + 1) % this.palette.length];
-                const colorFactor = (Math.sin(t + i * 0.3) + 1) / 2;
-                ctx.fillStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
-                ctx.strokeStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
-                const thetaOffset = Math.sin(t + i * 0.3) * 0.4;
-                if (data.type === 'Lines') {
-                    const x1 = cx + data.r1 * radius * Math.cos(data.theta1 + thetaOffset);
-                    const y1 = cy + data.r1 * radius * Math.sin(data.theta1 + thetaOffset);
-                    const x2 = cx + data.r2 * radius * Math.cos(data.theta2 + thetaOffset);
-                    const y2 = cy + data.r2 * radius * Math.sin(data.theta2 + thetaOffset);
-                    ctx.lineWidth = data.lineWidth * (1 + Math.sin(t + i * 0.3) * 0.8);
-                    ctx.beginPath();
-                    ctx.moveTo(x1, y1);
-                    ctx.lineTo(x2, y2);
-                    ctx.stroke();
-                } else if (data.type === 'Dots') {
-                    const x = cx + data.r * radius * Math.cos(data.theta + thetaOffset);
-                    const y = cy + data.r * radius * Math.sin(data.theta + thetaOffset);
-                    const size_dot = data.size_dot * (1 + Math.sin(t + i * 0.3) * 0.8);
-                    ctx.beginPath();
-                    ctx.arc(x, y, size_dot, 0, 2 * Math.PI);
-                    ctx.fill();
-                } else {
-                    const x = cx + data.r * radius * Math.cos(data.theta + thetaOffset);
-                    const y = cy + data.r * radius * Math.sin(data.theta + thetaOffset);
-                    const size_sq = data.size_sq * (1 + Math.sin(t + i * 0.3) * 0.8);
-                    ctx.fillRect(x - size_sq, y - size_sq, size_sq * 2, size_sq * 2);
-                }
-            }
-        } else if (this.mode === 'Spiral') {
-            const s = this.branch_settings;
-            for (let i = 0; i < this.elementsData.length; i++) {
-                let theta_start = this.elementsData[i].theta_start + t * 0.3;
-                let color_idx = this.elementsData[i].color_idx;
-                const next_color_idx = (color_idx + 1) % this.palette.length;
-                for (let r = 0; r < radius; r += 2) {
-                    const theta = theta_start + r * s.spiral_density;
-                    const x = cx + r * Math.cos(theta);
-                    const y = cy + r * Math.sin(theta);
-                    const colorFactor = (Math.sin(t + r * 0.02) + 1) / 2;
-                    const r_col = Math.round(this.palette[color_idx][0] * (1 - colorFactor) + this.palette[next_color_idx][0] * colorFactor);
-                    const g_col = Math.round(this.palette[color_idx][1] * (1 - colorFactor) + this.palette[next_color_idx][1] * colorFactor);
-                    const b_col = Math.round(this.palette[color_idx][2] * (1 - colorFactor) + this.palette[next_color_idx][2] * colorFactor);
-                    const a_col = this.palette[color_idx][3] * (1 - colorFactor) + this.palette[next_color_idx][3] * colorFactor;
-                    const width = Math.max(2, 4 + Math.sin(r * 0.03 + t) * 5);
-                    ctx.fillStyle = `rgba(${r_col}, ${g_col}, ${b_col}, ${a_col})`;
-                    ctx.beginPath();
-                    ctx.arc(x, y, width, 0, 2 * Math.PI);
-                    ctx.fill();
-                }
-            }
-        } else if (this.mode === 'Orbit') {
-            const diameter = this.size;
-            for (const config of this.elementsData) {
-                const width = config.width;
-                const height = width;
-                let x = config.left !== undefined ? config.left : diameter - config.right - width;
-                let y = config.top !== undefined ? config.top : diameter - config.bottom - height;
-                x = cx + (x - diameter/2) * (1 + Math.sin(t) * 0.3);
-                y = cy + (y - diameter/2) * (1 + Math.cos(t) * 0.3);
-                const opacity = config.blink === 'blink' ? 0.5 + 0.5 * Math.sin(t / config.speed) :
-                                config.blink === 'blink-lighter' ? 0.3 + 0.2 * Math.sin(t / config.speed) :
-                                0.375 + 0.375 * Math.sin(t / config.speed);
-                const pattern = this._makeTrianglifyPattern(width, height, t);
-                ctx.globalAlpha = opacity;
-                ctx.drawImage(pattern, x, y, width, height);
-                ctx.globalAlpha = 1;
-                ctx.strokeStyle = `rgba(0, 0, 255, ${0.5 + Math.sin(t) * 0.5})`;
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.arc(x + width / 2, y + height / 2, width / 2, 0, 2 * Math.PI);
-                ctx.stroke();
-            }
-        } else if (this.mode === 'DotToShape') {
-            for (let i = 0; i < this.elementsData.length; i++) {
-                const data = this.elementsData[i];
-                const color = this.palette[data.colorIdx];
-                const nextColor = this.palette[(data.colorIdx + 1) % this.palette.length];
-                const colorFactor = (Math.sin(t + i * 0.3) + 1) / 2;
-                ctx.fillStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
-                const thetaOffset = Math.sin(t + i * 0.3) * 0.4;
-                const x = cx + data.r * radius * Math.cos(data.theta + thetaOffset);
-                const y = cy + data.r * radius * Math.sin(data.theta + thetaOffset);
-                const size_dot = data.size_dot * (1 + Math.sin(t + i * 0.3) * 0.8);
-                const size_sq = data.size_sq * (1 + Math.sin(t + i * 0.3) * 0.8);
-                const shapeFactor = (Math.sin(t * 2) + 1) / 2;
-                const size = size_dot * (1 - shapeFactor) + size_sq * shapeFactor;
-                const cornerRadius = size * (1 - shapeFactor);
-                ctx.beginPath();
-                ctx.moveTo(x - size + cornerRadius, y - size);
-                ctx.lineTo(x + size - cornerRadius, y - size);
-                ctx.arcTo(x + size, y - size, x + size, y - size + cornerRadius, cornerRadius);
-                ctx.lineTo(x + size, y + size - cornerRadius);
-                ctx.arcTo(x + size, y + size, x + size - cornerRadius, y + size, cornerRadius);
-                ctx.lineTo(x - size + cornerRadius, y + size);
-                ctx.arcTo(x - size, y + size, x - size, y + size - cornerRadius, cornerRadius);
-                ctx.lineTo(x - size, y - size + cornerRadius);
-                ctx.arcTo(x - size, y - size, x - size + cornerRadius, y - size, cornerRadius);
-                ctx.closePath();
-                ctx.fill();
-            }
-        } else if (this.mode === 'DotsToMixed') {
-            for (let i = 0; i < this.elementsData.length; i++) {
-                const data = this.elementsData[i];
-                const color = this.palette[data.colorIdx];
-                const nextColor = this.palette[(data.colorIdx + 1) % this.palette.length];
-                const colorFactor = (Math.sin(t + i * 0.3) + 1) / 2;
-                ctx.fillStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
-                ctx.strokeStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
-                const thetaOffset = Math.sin(t + i * 0.3) * 0.4;
-                const x = cx + data.r * radius * Math.cos(data.theta + thetaOffset);
-                const y = cy + data.r * radius * Math.sin(data.theta + thetaOffset);
-                const shapeFactor = (Math.sin(t * 2) + 1) / 2;
-                if (shapeFactor < 0.5) {
-                    const size_dot = data.size_dot * (1 + Math.sin(t + i * 0.3) * 0.8);
-                    ctx.beginPath();
-                    ctx.arc(x, y, size_dot * (1 - shapeFactor * 2), 0, 2 * Math.PI);
-                    ctx.fill();
-                } else {
-                    if (data.type === 'Lines') {
-                        const x1 = cx + data.r1 * radius * Math.cos(data.theta1 + thetaOffset);
-                        const y1 = cy + data.r1 * radius * Math.sin(data.theta1 + thetaOffset);
-                        const x2 = cx + data.r2 * radius * Math.cos(data.theta2 + thetaOffset);
-                        const y2 = cy + data.r2 * radius * Math.sin(data.theta2 + thetaOffset);
-                        ctx.lineWidth = data.lineWidth * (1 + Math.sin(t + i * 0.3) * 0.8) * (shapeFactor * 2 - 1);
-                        ctx.beginPath();
-                        ctx.moveTo(x1, y1);
-                        ctx.lineTo(x2, y2);
-                        ctx.stroke();
-                    } else if (data.type === 'Dots') {
-                        const size_dot = data.size_dot * (1 + Math.sin(t + i * 0.3) * 0.8) * (shapeFactor * 2 - 1);
-                        ctx.beginPath();
-                        ctx.arc(x, y, size_dot, 0, 2 * Math.PI);
-                        ctx.fill();
-                    } else {
-                        const size_sq = data.size_sq * (1 + Math.sin(t + i * 0.3) * 0.8) * (shapeFactor * 2 - 1);
-                        ctx.fillRect(x - size_sq, y - size_sq, size_sq * 2, size_sq * 2);
-                    }
-                }
+        // Add image URL
+        function addImageUrl() {
+            const url = $("#image-url").val().trim();
+            if (url) {
+                images.push(url);
+                updateImageList();
+                if (images.length === 1) changePicture();
+                $("#image-url").val("");
+                if (window.innerWidth <= 768) toggleMenu();
             }
         }
 
-        const full = document.createElement('canvas');
-        full.width = this.size;
-        full.height = this.size;
-        const fullCtx = full.getContext('2d');
-        fullCtx.fillStyle = `rgba(${backgroundColor[0]}, ${backgroundColor[1]}, ${backgroundColor[2]}, ${backgroundColor[3]})`;
-        fullCtx.fillRect(0, 0, this.size, this.size);
-        for (let i = 0; i < this.sectors; i++) {
-            fullCtx.save();
-            fullCtx.translate(cx, cy);
-            fullCtx.rotate((angle * i + rotationOffset) * Math.PI / 180);
-            if (i % 2 === 1) {
-                fullCtx.scale(-1, 1);
+        // Add uploaded images with resizing
+        function addImageFiles() {
+            const files = $("#image-upload")[0].files;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        const maxSize = 800;
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > height) {
+                            if (width > maxSize) {
+                                height *= maxSize / width;
+                                width = maxSize;
+                            }
+                        } else {
+                            if (height > maxSize) {
+                                width *= maxSize / height;
+                                height = maxSize;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        images.push(canvas.toDataURL('image/jpeg', 0.8));
+                        updateImageList();
+                        if (images.length === 1) changePicture();
+                    };
+                };
+                reader.readAsDataURL(file);
             }
-            fullCtx.drawImage(canvas, -cx, -cy);
-            fullCtx.restore();
+            $("#image-upload").val("");
+            if (window.innerWidth <= 768) toggleMenu();
         }
-        return full;
-    }
 
-    _drawShape(x, y, angle, size, ctx, points, t) {
-        this._drawBranch(x, y, angle, size, 1, ctx, points, t);
-        this._drawBranch(x, y, angle, size, -1, ctx, points, t);
-    }
-
-    _drawBranch(x, y, angle, size, direction, ctx, points, t) {
-        const s = this.branch_settings;
-        const new_angle = angle + (s.angle * direction + s.offset) + Math.sin(t) * 0.3;
-        const new_size = size * s.scale * (1 + Math.sin(t) * 0.2);
-        const x2 = x + Math.cos(new_angle) * new_size;
-        const y2 = y + Math.sin(new_angle) * new_size;
-        const color = this.palette[Math.floor(Math.random() * this.palette.length)];
-        const nextColor = this.palette[(Math.floor(Math.random() * this.palette.length) + 1) % this.palette.length];
-        const colorFactor = (Math.sin(t) + 1) / 2;
-        ctx.strokeStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
-        ctx.lineWidth = 2 * (1 + Math.sin(t) * 0.8);
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
-        points.push({ x: x2, y: y2, angle: new_angle, size: new_size });
-    }
-}
-
-let palette = loadPalette();
-let currentImage = null;
-let isAnimating = false;
-let isFullAnimating = false;
-let isRecording = false;
-let animationFrameId = null;
-let fullAnimationFrameId = null;
-let startTime = null;
-let fullStartTime = null;
-let generator = null;
-let mediaRecorder = null;
-let recordedChunks = [];
-let recordTimerId = null;
-let recordStartTime = null;
-
-function loadPalette() {
-    const generatedColors = localStorage.getItem('generatedColors');
-    if (generatedColors) {
-        try {
-            const colors = JSON.parse(generatedColors);
-            if (Array.isArray(colors) && colors.every(c => /^#[0-9A-Fa-f]{6}$/.test(c))) {
-                const newPalette = {};
-                colors.forEach((color, index) => {
-                    const rgb = hexToRgb(color);
-                    newPalette[(index + 1).toString()] = [...rgb, 1];
-                });
-                localStorage.setItem('palette', JSON.stringify(newPalette));
-                return newPalette;
-            }
-        } catch (e) {
-            console.error('Error parsing generatedColors:', e);
+        // Delete image
+        function deleteImage(idx) {
+            images.splice(idx, 1);
+            if (index >= images.length) index = 0;
+            updateImageList();
+            if (images.length > 0) changePicture();
+            else scope.setImage(null);
+            if (window.innerWidth <= 768) toggleMenu();
         }
-    }
-    const saved = localStorage.getItem('palette');
-    if (saved) {
-        try {
-            const json = JSON.parse(saved);
-            if (Object.keys(json).every(k => Array.isArray(json[k]) && json[k].length === 4 && json[k].slice(0, 3).every(c => Number.isInteger(c) && c >= 0 && c <= 255) && json[k][3] >= 0 && json[k][3] <= 1)) {
-                return json;
-            }
-        } catch (e) {
-            console.error('Error parsing saved palette:', e);
-        }
-    }
-    return DEFAULT_PALETTE;
-}
 
-function loadBackgroundColor() {
-    const saved = localStorage.getItem('backgroundColor');
-    if (saved) {
-        try {
-            const color = JSON.parse(saved);
-            if (Array.isArray(color) && color.length === 4 && color.slice(0, 3).every(c => Number.isInteger(c) && c >= 0 && c <= 255) && color[3] >= 0 && color[3] <= 1) {
-                backgroundColor = color;
-            }
-        } catch (e) {
-            console.error('Error parsing saved background color:', e);
-        }
-    }
-}
-
-function savePalette() {
-    localStorage.setItem('palette', JSON.stringify(palette));
-}
-
-function updatePaletteTable() {
-    const tbody = document.querySelector('#paletteTable tbody');
-    tbody.innerHTML = '';
-    Object.entries(palette).forEach(([key, color], index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td class="border-b p-3 text-center text-gray-700">${key}</td>
-            <td class="border-b p-3">
-                <button class="color-btn" style="background-color: rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]});" title="Изменить цвет"></button>
-            </td>
-            <td class="border-b p-3">
-                <button class="delete-btn" title="Удалить цвет">Удалить</button>
-            </td>
-        `;
-        row.querySelector('.color-btn').addEventListener('click', () => changeColor(index));
-        row.querySelector('.delete-btn').addEventListener('click', () => removeSpecificColor(key));
-        tbody.appendChild(row);
-    });
-}
-
-function addColor() {
-    if (Object.keys(palette).length >= 20) {
-        alert('Максимум 20 цветов!');
-        return;
-    }
-    const newKey = (Object.keys(palette).length + 1).toString();
-    palette[newKey] = AVAILABLE_COLORS[colorIndex % AVAILABLE_COLORS.length];
-    colorIndex++;
-    updatePaletteTable();
-    savePalette();
-}
-
-function removeColor() {
-    if (Object.keys(palette).length <= 1) {
-        alert('Минимум 1 цвет!');
-        return;
-    }
-    const keys = Object.keys(palette);
-    delete palette[keys[keys.length - 1]];
-    updatePaletteTable();
-    savePalette();
-}
-
-function removeSpecificColor(key) {
-    if (Object.keys(palette).length <= 1) {
-        alert('Минимум 1 цвет!');
-        return;
-    }
-    delete palette[key];
-    const newPalette = {};
-    Object.values(palette).forEach((color, index) => {
-        newPalette[(index + 1).toString()] = color;
-    });
-    palette = newPalette;
-    updatePaletteTable();
-    savePalette();
-}
-
-function changeColor(row) {
-    const key = Object.keys(palette)[row];
-    const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-    modal.innerHTML = `
-        <div class="bg-white p-6 rounded-lg max-w-sm w-full">
-            <h3 class="text-lg font-semibold mb-4">Выбор цвета для ключа ${key}</h3>
-            <input type="color" id="colorPicker" value="${rgbToHex(palette[key])}" class="w-full h-12 mb-4">
-            <label class="block text-sm font-medium mb-1">Прозрачность: <span id="opacityValue">${palette[key][3]}</span></label>
-            <input type="range" id="opacitySlider" min="0" max="1" step="0.01" value="${palette[key][3]}" class="w-full mb-4">
-            <div class="flex justify-end gap-3">
-                <button id="cancelBtn" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Отмена</button>
-                <button id="saveColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Сохранить</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    document.getElementById('opacitySlider').addEventListener('input', (e) => {
-        document.getElementById('opacityValue').textContent = e.target.value;
-    });
-    document.getElementById('saveColorBtn').addEventListener('click', () => {
-        const color = hexToRgb(document.getElementById('colorPicker').value);
-        const opacity = parseFloat(document.getElementById('opacitySlider').value);
-        palette[key] = [...color, opacity];
-        updatePaletteTable();
-        savePalette();
-        document.body.removeChild(modal);
-    });
-    document.getElementById('cancelBtn').addEventListener('click', () => {
-        document.body.removeChild(modal);
-    });
-}
-
-function changeBackgroundColor() {
-    const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-    modal.innerHTML = `
-        <div class="bg-white p-6 rounded-lg max-w-sm w-full">
-            <h3 class="text-lg font-semibold mb-4">Выбор цвета фона</h3>
-            <input type="color" id="backgroundColorPicker" value="${rgbToHex(backgroundColor)}" class="w-full h-12 mb-4">
-            <label class="block text-sm font-medium mb-1">Прозрачность: <span id="backgroundOpacityValue">${backgroundColor[3]}</span></label>
-            <input type="range" id="backgroundOpacitySlider" min="0" max="1" step="0.01" value="${backgroundColor[3]}" class="w-full mb-4">
-            <div class="flex justify-end gap-3">
-                <button id="cancelBackgroundBtn" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Отмена</button>
-                <button id="saveBackgroundColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Сохранить</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    document.getElementById('backgroundOpacitySlider').addEventListener('input', (e) => {
-        document.getElementById('backgroundOpacityValue').textContent = e.target.value;
-    });
-    document.getElementById('saveBackgroundColorBtn').addEventListener('click', () => {
-        const color = hexToRgb(document.getElementById('backgroundColorPicker').value);
-        const opacity = parseFloat(document.getElementById('backgroundOpacitySlider').value);
-        backgroundColor = [...color, opacity];
-        localStorage.setItem('backgroundColor', JSON.stringify(backgroundColor));
-        document.body.removeChild(modal);
-        generate();
-    });
-    document.getElementById('cancelBackgroundBtn').addEventListener('click', () => {
-        document.body.removeChild(modal);
-    });
-}
-
-function rgbToHex([r, g, b]) {
-    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
-}
-
-function hexToRgb(hex) {
-    const bigint = parseInt(hex.slice(1), 16);
-    return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
-}
-
-function formatTime(seconds) {
-    const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-    const secs = (seconds % 60).toString().padStart(2, '0');
-    return `${mins}:${secs}`;
-}
-
-function updateRecordTimer() {
-    if (isRecording) {
-        const elapsed = Math.floor((Date.now() - recordStartTime) / 1000);
-        document.getElementById('recordTimer').textContent = `Запись: ${formatTime(elapsed)}`;
-        if (elapsed >= MAX_RECORDING_DURATION) {
-            stopRecording();
-            alert(`Максимальная длительность записи (${MAX_RECORDING_DURATION} секунд) достигнута.`);
-        }
-    }
-}
-
-function resetRecordTimer() {
-    document.getElementById('recordTimer').textContent = 'Запись: 00:00';
-    if (recordTimerId) {
-        clearInterval(recordTimerId);
-        recordTimerId = null;
-    }
-}
-
-function generate() {
-    stopAnimation();
-    stopFullAnimation();
-    stopRecording();
-    const modeMap = {
-        'Линии': 'Lines',
-        'Точки': 'Dots',
-        'Фигуры': 'Shapes',
-        'Смешанный': 'Mixed',
-        'Спираль': 'Spiral',
-        'Орбиты': 'Orbit',
-        'Точки в Фигуры': 'DotToShape',
-        'Точки в Смешанный': 'DotsToMixed'
-    };
-    const mode = modeMap[document.getElementById('modeCombo').value];
-    const elements = parseInt(document.getElementById('elementSlider').value);
-    const slices = parseInt(document.getElementById('slicesSlider').value);
-    generator = new KaleidoGenerator(MAIN_PX, palette, mode, 12, elements, slices);
-    const canvas = document.getElementById('previewCanvas');
-    canvas.width = CANVAS_PX;
-    canvas.height = CANVAS_PX;
-    generator.generate(canvas);
-    currentImage = canvas;
-}
-
-function animate() {
-    if (!currentImage || !generator) {
-        alert('Сначала сгенерируйте узор!');
-        return;
-    }
-    isAnimating = !isAnimating;
-    const animateBtn = document.getElementById('animateBtn');
-    if (isAnimating) {
-        animateBtn.textContent = 'Остановить';
-        animateBtn.classList.add('active');
-        startTime = Date.now();
-        requestAnimationFrame(animateLoop);
-    } else {
-        animateBtn.textContent = 'Анимировать';
-        animateBtn.classList.remove('active');
-        cancelAnimationFrame(animationFrameId);
-    }
-}
-
-function animateLoop() {
-    if (!isAnimating || !generator) {
-        return;
-    }
-    const canvas = document.getElementById('previewCanvas');
-    if (!canvas) {
-        stopAnimation();
-        return;
-    }
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-        stopAnimation();
-        return;
-    }
-    canvas.width = isRecording && isMobile ? MOBILE_RECORDING_PX : CANVAS_PX;
-    canvas.height = isRecording && isMobile ? MOBILE_RECORDING_PX : CANVAS_PX;
-    const elapsedTime = (Date.now() - startTime) / 1000;
-    generator.size = isRecording && isMobile ? MOBILE_RECORDING_PX : CANVAS_PX;
-    generator.generate(canvas, true, elapsedTime);
-    generator.size = CANVAS_PX;
-    currentImage = canvas;
-    animationFrameId = requestAnimationFrame(animateLoop);
-}
-
-function stopAnimation() {
-    if (isAnimating) {
-        isAnimating = false;
-        const animateBtn = document.getElementById('animateBtn');
-        animateBtn.textContent = 'Анимировать';
-        animateBtn.classList.remove('active');
-        cancelAnimationFrame(animationFrameId);
-    }
-}
-
-function openFullImage() {
-    if (!currentImage || !generator) {
-        alert('Сначала сгенерируйте узор!');
-        return;
-    }
-    stopAnimation();
-    const modal = document.getElementById('imageModal');
-    const fullCanvas = document.getElementById('fullCanvas');
-    fullCanvas.width = CANVAS_PX;
-    fullCanvas.height = CANVAS_PX;
-    const gen = new KaleidoGenerator(MAIN_PX, palette,
-        document.getElementById('modeCombo').value === 'Линии' ? 'Lines' :
-        document.getElementById('modeCombo').value === 'Точки' ? 'Dots' :
-        document.getElementById('modeCombo').value === 'Фигуры' ? 'Shapes' :
-        document.getElementById('modeCombo').value === 'Смешанный' ? 'Mixed' :
-        document.getElementById('modeCombo').value === 'Спираль' ? 'Spiral' :
-        document.getElementById('modeCombo').value === 'Орбиты' ? 'Orbit' :
-        document.getElementById('modeCombo').value === 'Точки в Фигуры' ? 'DotToShape' :
-        'DotsToMixed',
-        12,
-        parseInt(document.getElementById('elementSlider').value),
-        parseInt(document.getElementById('slicesSlider').value)
-    );
-    isFullAnimating = true;
-    fullStartTime = Date.now();
-    gen.generate(fullCanvas, true, 0);
-    modal.classList.add('show');
-    requestAnimationFrame(() => animateFullLoop(gen));
-}
-
-function animateFullLoop(generator) {
-    if (!isFullAnimating || !generator) {
-        return;
-    }
-    const fullCanvas = document.getElementById('fullCanvas');
-    if (!fullCanvas) {
-        stopFullAnimation();
-        return;
-    }
-    const ctx = fullCanvas.getContext('2d');
-    if (!ctx) {
-        stopFullAnimation();
-        return;
-    }
-    fullCanvas.width = CANVAS_PX;
-    const elapsedTime = (Date.now() - fullStartTime) / 1000;
-    generator.generate(fullCanvas, true, elapsedTime);
-    fullAnimationFrameId = requestAnimationFrame(() => animateFullLoop(generator));
-}
-
-function stopFullAnimation() {
-    if (isFullAnimating) {
-        isFullAnimating = false;
-        cancelAnimationFrame(fullAnimationFrameId);
-    }
-}
-
-function save() {
-    stopAnimation();
-    if (!currentImage || !generator) {
-        alert('Сначала сгенерируйте узор!');
-        return;
-    }
-    const fullCanvas = document.createElement('canvas');
-    fullCanvas.width = CANVAS_PX;
-    fullCanvas.height = CANVAS_PX;
-    const gen = new KaleidoGenerator(MAIN_PX, palette,
-        document.getElementById('modeCombo').value === 'Линии' ? 'Lines' :
-        document.getElementById('modeCombo').value === 'Точки' ? 'Dots' :
-        document.getElementById('modeCombo').value === 'Фигуры' ? 'Shapes' :
-        document.getElementById('modeCombo').value === 'Смешанный' ? 'Mixed' :
-        document.getElementById('modeCombo').value === 'Спираль' ? 'Spiral' :
-        document.getElementById('modeCombo').value === 'Орбиты' ? 'Orbit' :
-        document.getElementById('modeCombo').value === 'Точки в Фигуры' ? 'DotToShape' :
-        'DotsToMixed',
-        12,
-        parseInt(document.getElementById('elementSlider').value),
-        parseInt(document.getElementById('slicesSlider').value)
-    );
-    gen.generate(fullCanvas);
-    const link = document.createElement('a');
-    link.download = 'калейдоскоп.png';
-    link.href = fullCanvas.toDataURL('image/png');
-    link.click();
-}
-
-function startStopRecording() {
-    if (!currentImage || !generator) {
-        alert('Сначала сгенерируйте узор!');
-        return;
-    }
-    const recordBtn = document.getElementById('recordBtn');
-    const downloadVideoBtn = document.getElementById('downloadVideoBtn');
-    const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.4D401E') ? 'video/mp4;codecs=avc1.4D401E' : 'video/webm;codecs=vp9';
-    const fileExtension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
-    if (!isRecording) {
-        if (!MediaRecorder.isTypeSupported(mimeType)) {
-            alert(`Формат ${fileExtension.toUpperCase()} не поддерживается вашим браузером. Попробуйте другой браузер, например Chrome.`);
-            return;
-        }
-        if (!isAnimating) {
-            isAnimating = true;
-            startTime = Date.now();
-            requestAnimationFrame(animateLoop);
-            document.getElementById('animateBtn').textContent = 'Остановить';
-            document.getElementById('animateBtn').classList.add('active');
-        }
-        recordedChunks = [];
-        const canvas = document.getElementById('previewCanvas');
-        canvas.width = isMobile ? MOBILE_RECORDING_PX : CANVAS_PX;
-        canvas.height = isMobile ? MOBILE_RECORDING_PX : CANVAS_PX;
-        const stream = canvas.captureStream(isMobile ? 30 : 60);
-        try {
-            mediaRecorder = new MediaRecorder(stream, {
-                mimeType: mimeType,
-                videoBitsPerSecond: isMobile ? 10000000 : 20000000
+        // Update image list display
+        function updateImageList() {
+            const list = $("#image-list");
+            list.empty();
+            images.forEach((img, i) => {
+                list.append(`
+                    <li>
+                        <span>${img.substring(0, 30)}${img.length > 30 ? '...' : ''}</span>
+                        <button class="delete-btn" onclick="deleteImage(${i})" title="Удалить изображение">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </li>
+                `);
             });
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    recordedChunks.push(event.data);
-                }
-            };
-            mediaRecorder.onstop = () => {
-                downloadVideoBtn.disabled = recordedChunks.length === 0;
-                resetRecordTimer();
-            };
-            mediaRecorder.onerror = (event) => {
-                console.error('MediaRecorder error:', event.error);
-                alert('Ошибка при записи видео: ' + event.error.message);
-                stopRecording();
-            };
-            mediaRecorder.start();
-            isRecording = true;
-            recordBtn.textContent = 'Стоп запись';
-            recordBtn.classList.add('active');
-            recordStartTime = Date.now();
-            recordTimerId = setInterval(updateRecordTimer, 1000);
-        } catch (e) {
-            console.error('Failed to start recording:', e);
-            alert('Не удалось начать запись. Формат MP4 может быть неподдерживаемым. Попробуйте браузер Chrome.');
         }
-    } else {
-        mediaRecorder.stop();
-        isRecording = false;
-        recordBtn.textContent = 'Старт запись';
-        recordBtn.classList.remove('active');
-    }
-}
 
-function downloadVideo() {
-    if (recordedChunks.length === 0) {
-        alert('Нет записанного видео для скачивания!');
-        return;
-    }
-    const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.4D401E') ? 'video/mp4' : 'video/webm';
-    const fileExtension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
-    const blob = new Blob(recordedChunks, { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `калейдоскоп.${fileExtension}`;
-    link.click();
-    URL.revokeObjectURL(url);
-    recordedChunks = [];
-    document.getElementById('downloadVideoBtn').disabled = true;
-}
+        // Change picture
+        function changePicture() {
+            if (images.length > 0) {
+                scope.setImage(images[index]);
+                index = (index + 1) % images.length;
+            }
+        }
 
-document.getElementById('elementSlider').addEventListener('input', (e) => {
-    document.getElementById('elementValue').textContent = e.target.value;
-    stopAnimation();
-    stopFullAnimation();
-    stopRecording();
-});
+        // Smooth auto animation with frame rate control
+        let lastAnimationTime = 0;
+        const FPS_LIMIT = 30;
+        function animate(currentTime) {
+            if (autoAnimation) {
+                if (currentTime - lastAnimationTime >= 1000 / FPS_LIMIT) {
+                    time += 0.02 * sensitivity;
+                    scope.angleTarget = 0.5 + 0.5 * Math.sin(time);
+                    scope.zoomTarget = 1.0 + 0.5 * Math.sin(time * 0.7);
+                    lastAnimationTime = currentTime;
+                }
+                animationFrameId = requestAnimationFrame(animate);
+            }
+        }
 
-document.getElementById('slicesSlider').addEventListener('input', (e) => {
-    document.getElementById('slicesValue').textContent = e.target.value;
-    stopAnimation();
-    stopFullAnimation();
-    stopRecording();
-});
+        // Toggle auto animation
+        function toggleAutoAnimation() {
+            autoAnimation = !autoAnimation;
+            const animateBtn = $("#animateBtn");
+            if (autoAnimation) {
+                animateBtn.html(`
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Остановить анимацию
+                `);
+                animateBtn.addClass("active");
+                lastAnimationTime = performance.now();
+                animationFrameId = requestAnimationFrame(animate);
+            } else {
+                animateBtn.html(`
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.2A1 1 0 0010 9.768v4.464a1 1 0 001.555.832l3.197-2.2a1 1 0 000-1.664z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Переключить анимацию
+                `);
+                animateBtn.removeClass("active");
+                cancelAnimationFrame(animationFrameId);
+            }
+            if (window.innerWidth <= 768) toggleMenu();
+        }
 
-document.getElementById('animationSpeedSlider').addEventListener('input', (e) => {
-    ANIMATION_SPEED = parseFloat(e.target.value);
-    document.getElementById('animationSpeedValue').textContent = ANIMATION_SPEED.toFixed(2);
-});
+        // Update sensitivity
+        $("#sensitivity").on("input", function() {
+            sensitivity = parseFloat(this.value);
+            $("#sensitivity-value").text(sensitivity.toFixed(1));
+        });
 
-document.getElementById('modeCombo').addEventListener('change', () => {
-    const selectedValue = document.getElementById('modeCombo').value;
-    if (selectedValue === 'Crystal') {
-        window.location.href = 'kalei.html';
-    } else {
-        stopAnimation();
-        stopFullAnimation();
-        stopRecording();
-    }
-});
+        // Format time for recording timer
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const secs = (seconds % 60).toString().padStart(2, '0');
+            return `${mins}:${secs}`;
+        }
 
-document.getElementById('addColorBtn').addEventListener('click', () => {
-    addColor();
-    stopAnimation();
-    stopFullAnimation();
-    stopRecording();
-});
+        // Update recording timer
+        function updateRecordTimer() {
+            if (isRecording) {
+                const elapsed = Math.floor((Date.now() - recordStartTime) / 1000);
+                $("#recordTimer").text(`Запись: ${formatTime(elapsed)}`);
+                if (elapsed >= MAX_RECORDING_DURATION) {
+                    stopRecording();
+                    alert(`Максимальная длительность записи (${MAX_RECORDING_DURATION} секунд) достигнута.`);
+                }
+            }
+        }
 
-document.getElementById('removeColorBtn').addEventListener('click', () => {
-    removeColor();
-    stopAnimation();
-    stopFullAnimation();
-    stopRecording();
-});
+        // Reset recording timer
+        function resetRecordTimer() {
+            $("#recordTimer").text('Запись: 00:00');
+            if (recordTimerId) {
+                clearInterval(recordTimerId);
+                recordTimerId = null;
+            }
+        }
 
-document.getElementById('generateBtn').addEventListener('click', generate);
-document.getElementById('animateBtn').addEventListener('click', animate);
-document.getElementById('recordBtn').addEventListener('click', startStopRecording);
-document.getElementById('downloadVideoBtn').addEventListener('click', downloadVideo);
-document.getElementById('viewBtn').addEventListener('click', openFullImage);
-document.getElementById('saveBtn').addEventListener('click', save);
-document.getElementById('closeModalBtn').addEventListener('click', () => {
-    stopFullAnimation();
-    document.getElementById('imageModal').classList.remove('show');
-});
-document.getElementById('home').addEventListener('click', () => {
-    stopAnimation();
-    stopFullAnimation();
-    stopRecording();
-    window.location.href = 'index.html';
-});
-document.getElementById('changeBackgroundColorBtn').addEventListener('click', changeBackgroundColor);
+        // Start/stop recording
+        function startStopRecording() {
+            if (images.length === 0) {
+                alert('Сначала добавьте хотя бы одно изображение!');
+                return;
+            }
+            const recordBtn = $("#recordBtn");
+            const downloadVideoBtn = $("#downloadVideoBtn");
+            const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.4D401E') ? 'video/mp4;codecs=avc1.4D401E' : 'video/webm;codecs=vp9';
+            const fileExtension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
+            if (!isRecording) {
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    alert(`Формат ${fileExtension.toUpperCase()} не поддерживается вашим браузером. Попробуйте использовать Chrome или другой современный браузер.`);
+                    return;
+                }
+                if (!autoAnimation) {
+                    toggleAutoAnimation();
+                }
+                recordedChunks = [];
+                scope.domElement.width = RECORDING_PX;
+                scope.domElement.height = RECORDING_PX;
+                scope.resizeHandler();
+                const stream = scope.domElement.captureStream(30);
+                try {
+                    mediaRecorder = new MediaRecorder(stream, {
+                        mimeType: mimeType,
+                        videoBitsPerSecond: window.innerWidth <= 768 ? 5000000 : 10000000
+                    });
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            recordedChunks.push(event.data);
+                        }
+                    };
+                    mediaRecorder.onstop = () => {
+                        downloadVideoBtn.prop("disabled", recordedChunks.length === 0);
+                        resetRecordTimer();
+                        scope.domElement.width = container[0].clientWidth;
+                        scope.domElement.height = container[0].clientHeight;
+                        scope.resizeHandler();
+                    };
+                    mediaRecorder.onerror = (event) => {
+                        console.error('MediaRecorder error:', event.error);
+                        alert(`Ошибка записи видео: ${event.error.message}. Убедитесь, что ваш браузер поддерживает формат ${fileExtension.toUpperCase()} и у вас достаточно ресурсов устройства. Попробуйте уменьшить разрешение или использовать Chrome.`);
+                        stopRecording();
+                    };
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordBtn.html(`
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Остановить запись
+                    `);
+                    recordBtn.addClass("active");
+                    recordStartTime = Date.now();
+                    recordTimerId = setInterval(updateRecordTimer, 1000);
+                } catch (e) {
+                    console.error('Failed to start recording:', e);
+                    alert(`Не удалось начать запись: ${e.message}. Убедитесь, что ваш браузер поддерживает формат ${fileExtension.toUpperCase()} и у вас достаточно ресурсов устройства. Попробуйте использовать Chrome.`);
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordBtn.html(`
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                    </svg>
+                    Начать запись
+                `);
+                recordBtn.removeClass("active");
+            }
+            if (window.innerWidth <= 768) toggleMenu();
+        }
 
-function stopRecording() {
-    if (isRecording) {
-        mediaRecorder.stop();
-        isRecording = false;
-        document.getElementById('recordBtn').textContent = 'Старт запись';
-        document.getElementById('recordBtn').classList.remove('active');
-        document.getElementById('downloadVideoBtn').disabled = recordedChunks.length === 0;
-        resetRecordTimer();
-    }
-}
+        // Stop recording
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                $("#recordBtn").html(`
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                    </svg>
+                    Начать запись
+                `);
+                $("#recordBtn").removeClass("active");
+            }
+        }
 
-updatePaletteTable();
-loadBackgroundColor();
+        // Download recorded video
+        function downloadVideo() {
+            if (recordedChunks.length === 0) {
+                alert('Нет записанного видео для скачивания!');
+                return;
+            }
+            const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.4D401E') ? 'video/mp4' : 'video/webm';
+            const fileExtension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
+            const blob = new Blob(recordedChunks, { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `калейдоскоп.${fileExtension}`;
+            link.click();
+            URL.revokeObjectURL(url);
+            recordedChunks = [];
+            $("#downloadVideoBtn").prop("disabled", true);
+            if (window.innerWidth <= 768) toggleMenu();
+        }
+
+        // Auto change picture
+        setInterval(changePicture, 6000);
+
+        // Smooth mouse and touch move handler
+        const debouncedHandleMove = debounce(function(event) {
+            if (!autoAnimation) {
+                const isTouch = event.type === 'touchmove';
+                const clientX = isTouch ? event.touches[0].clientX : event.pageX;
+                const clientY = isTouch ? event.touches[0].clientY : event.pageY;
+                const factorx = clientX / window.innerWidth;
+                const factory = clientY / window.innerHeight;
+                const newAngleTarget = factorx * sensitivity;
+                const newZoomTarget = (1.0 + 0.5 * factory) * sensitivity;
+                // Smooth interpolation
+                scope.angleTarget = lastAngleTarget + (newAngleTarget - lastAngleTarget) * 0.3;
+                scope.zoomTarget = lastZoomTarget + (newZoomTarget - lastZoomTarget) * 0.3;
+                lastAngleTarget = scope.angleTarget;
+                lastZoomTarget = scope.zoomTarget;
+            }
+        }, 8);
+
+        $(window).off('mousemove touchmove').on('mousemove touchmove', debouncedHandleMove);
+
+        // Debounced resize handler
+        const debouncedResizeHandler = debounce(function() {
+            if (!isRecording) {
+                const canvasWidth = container[0].clientWidth;
+                const canvasHeight = container[0].clientHeight;
+                scope.domElement.width = canvasWidth;
+                scope.domElement.height = canvasHeight;
+                scope.resizeHandler();
+            }
+        }, 100);
+
+        $(window).off('resize').on('resize', debouncedResizeHandler);
+        debouncedResizeHandler();
+
+        container.off('click').on('click', changePicture);
+
+        // Initialize menu state based on screen size
+        if (window.innerWidth > 768) {
+            $('.left-panel').removeClass('hidden');
+        }
     </script>
 </body>
 </html>
-

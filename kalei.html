@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калейдоскоп Генератор</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+        body {
+            background: linear-gradient(135deg, #4b6cb7, #182848);
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            color: #e5e7eb;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        .left-panel {
+            width: 100%;
+            max-width: 320px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            padding: 1.5rem;
+            margin: 30px;
+            overflow-y: hidden;
+            z-index: 1000;
+            transition: transform 0.3s ease, left 0.3s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: calc(100% - 60px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        .left-panel.hidden {
+            left: -100%;
+        }
+        .right-panel {
+            flex: 1;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: 380px; /* 320px panel + 30px margin-left + 30px margin-right */
+        }
+        #kaleidoscope-container {
+            width: 100%;
+            max-width: 1000px;
+            aspect-ratio: 1/1;
+            background-color: white;
+            border: 3px solid #6ee7b7;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        #kaleidoscope-container canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid #6ee7b7;
+            border-radius: 8px;
+            color: #e5e7eb;
+            font-size: 0.9rem;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]::placeholder {
+            color: #a1a1aa;
+        }
+        input[type="text"]:focus, input[type="file"]:focus {
+            border-color: #22d3ee;
+            outline: none;
+        }
+        button {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(45deg, #ec4899, #3b82f6);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: transform 0.3s, background 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(45deg, #f9a8d4, #60a5fa);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        .action-btn {
+            margin: 0.75rem 0;
+        }
+        .delete-btn {
+            background: #ef4444;
+            padding: 0.5rem;
+            font-size: 0.85rem;
+            box-shadow: none;
+        }
+        .delete-btn:hover {
+            background: #b91c1c;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .image-list {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+            overflow-y: auto;
+            max-height: 200px;
+        }
+        .image-list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e5e7eb;
+            font-size: 0.9rem;
+        }
+        .image-list li span {
+            flex: 1;
+            word-break: break-all;
+        }
+        .slider-group {
+            margin-bottom: 1.5rem;
+        }
+        .slider-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #e5e7eb;
+            font-weight: 600;
+        }
+        input[type="range"] {
+            width: 100%;
+            accent-color: #6ee7b7;
+        }
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        #recordBtn.active {
+            background: linear-gradient(45deg, #ef4444, #b91c1c);
+        }
+        #recordTimer {
+            text-align: center;
+            color: #e5e7eb;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .toggle-menu {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 2000;
+            background: linear-gradient(45deg, #ec4899, #3b82f6);
+            padding: 0.75rem;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        @media (max-width: 768px) {
+            .left-panel {
+                max-width: 85%;
+                margin: 0;
+                height: 100%;
+            }
+            .right-panel {
+                padding: 0.5rem;
+                margin-left: 0;
+            }
+            #kaleidoscope-container {
+                max-width: 100%;
+            }
+            .container {
+                flex-direction: column;
+            }
+            .left-panel.hidden + .right-panel .toggle-menu {
+                display: block;
+            }
+            .image-list {
+                max-height: 150px;
+            }
+        }
+        @media (min-width: 769px) {
+            .toggle-menu {
+                display: none;
+            }
+            .left-panel {
+                position: static;
+                height: auto;
+                max-height: 100vh;
+            }
+        }
+        .hd, .tx, .sh, .overlay {
+            display: none;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://rawgithub.com/Grapheme/graphemescope/master/lib/graphemescope.js"></script>
+</head>
+<body>
+    <div class="container">
+        <button class="toggle-menu" onclick="toggleMenu()">☰</button>
+        <div class="left-panel hidden">
+            <button onclick="goBack()" title="Назад" class="action-btn">
+                Назад
+            </button>
+            <h2 class="text-lg font-bold mb-4 text-cyan-300">Калейдоскоп Студия</h2>
+            <div class="input-group">
+                <input type="text" id="image-url" placeholder="Введите URL изображения" class="focus:ring-2 focus:ring-cyan-400">
+                <button onclick="addImageUrl()" title="Добавить URL" class="action-btn">
+                   
+                    <p style="margin: 10px;">Добавить фото</p>
+                </button>
+            </div>
+            <div class="input-group">
+                <input type="file" id="image-upload" accept="image/*" multiple>
+                <button onclick="addImageFiles()" title="Загрузить изображения" class="action-btn">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    Загрузить изображения
+                </button>
+            </div>
+            <div class="slider-group">
+                <label for="sensitivity">Скорость анимации: <span id="sensitivity-value">1.0</span></label>
+                <input type="range" id="sensitivity" min="0.1" max="2.0" step="0.1" value="1.0" class="custom-range" title="Скорость анимации">
+            </div>
+            <div class="action-buttons">
+                <button onclick="toggleAutoAnimation()" id="animateBtn" title="Переключить анимацию">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.2A1 1 0 0010 9.768v4.464a1 1 0 001.555.832l3.197-2.2a1 1 0 000-1.664z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Переключить анимацию
+                </button>
+                <button onclick="startStopRecording()" id="recordBtn" title="Начать/остановить запись">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                    </svg>
+                    Начать запись
+                </button>
+                <button onclick="downloadVideo()" id="downloadVideoBtn" title="Скачать видео" disabled>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Скачать видео
+                </button>
+            </div>
+            <div id="recordTimer">Запись: 00:00</div>
+            <h3 class="text-base font-semibold mt-4 mb-2 text-cyan-300">Изображения</h3>
+            <ul id="image-list" class="image-list"></ul>
+        </div>
+        <div class="right-panel">
+            <div id="kaleidoscope-container"></div>
+        </div>
+    </div>
+    <script>
+        (function(){var a,b;b=function(){return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||function(a){return window.setTimeout(a,1e3/30)}}(),window.Graphemescope=a=function(){function a(a){var c=this;this.parentElement=null!=a?a:window.document.body,this.enabled=!0,this.radiusFactor=1,this.zoomFactor=1,this.angleFactor=0,this.zoomTarget=1.2,this.angleTarget=.8,this.easeEnabled=!0,this.ease=.1,null==this.domElement&&(this.domElement=document.createElement("canvas")),null==this.ctx&&(this.ctx=this.domElement.getContext("2d")),this.alphaFactor=1,this.alphaTarget=1,this.parentElement.appendChild(this.domElement),this.oldResizeHandler=function(){},null!==window.onresize&&(this.oldResizeHandler=window.onresize),window.onresize=function(){return c.resizeHandler()},this.resizeHandler(),b(function(){return c.animationFrame()})}return a.prototype.animationFrame=function(){var a=this;return b(function(){return a.animationFrame()}),this.enabled?(this.update(),this.draw()):void 0},a.prototype.resizeHandler=function(){return this.width=this.domElement.width=this.parentElement.offsetWidth,this.height=this.domElement.height=this.parentElement.offsetHeight,this.radius=.5*this.radiusFactor*Math.min(this.width,this.height),this.radiusHeight=.5*Math.sqrt(3)*this.radius,this.oldResizeHandler()},a.prototype.update=function(){return this.easeEnabled?(this.angleFactor+=(this.angleTarget-this.angleFactor)*this.ease,this.zoomFactor+=(this.zoomTarget-this.zoomFactor)*this.ease,this.alphaFactor+=(this.alphaTarget-this.alphaFactor)*this.ease):(this.angleFactor=this.angleTarget,this.zoomFactor=this.zoomTarget,this.alphaFactor=this.alphaTarget)},a.prototype.drawImage=function(a){var b,c;return this.ctx.save(),b=2/3*this.radiusHeight,c=this.zoomFactor*b/(.5*Math.min(a.width,a.height)),this.ctx.translate(0,b),this.ctx.scale(c,c),this.ctx.rotate(2*this.angleFactor*Math.PI),this.ctx.translate(-.5*a.width,-.5*a.height),this.ctx.fill(),this.ctx.restore()},a.prototype.drawCell=function(a){var b,c,d;for(d=[],b=c=0;6>c;b=++c)this.ctx.save(),this.ctx.rotate(2*b*Math.PI/6),this.ctx.scale([-1,1][b%2],1),this.ctx.beginPath(),this.ctx.moveTo(0,0),this.ctx.lineTo(-.5*this.radius,1*this.radiusHeight),this.ctx.lineTo(.5*this.radius,1*this.radiusHeight),this.ctx.closePath(),this.drawImage(a),d.push(this.ctx.restore());return d},a.prototype.drawLayer=function(a){var b,c,d,e,f,g,h,i,j,k,l,m;for(this.ctx.save(),this.ctx.translate(.5*this.width,.5*this.height),f=Math.ceil(.5*this.height/this.radiusHeight),c=Math.ceil(.5*this.width/(3*this.radius)),d=function(){l=[];for(var a=-c;c>=-c?c>=a:a>=c;c>=-c?a++:a--)l.push(a);return l}.apply(this),g=function(){m=[];for(var a=-f;f>=-f?f>=a:a>=f;f>=-f?a++:a--)m.push(a);return m}.apply(this),h=0,j=g.length;j>h;h++){for(e=g[h],this.ctx.save(),this.ctx.translate(0,this.radiusHeight*e),Math.abs(e)%2&&this.ctx.translate(1.5*this.radius,0),i=0,k=d.length;k>i;i++)b=d[i],this.ctx.save(),this.ctx.translate(3*b*this.radius,0),this.drawCell(a),this.ctx.restore();this.ctx.restore()}return this.ctx.restore()},a.prototype.draw=function(){return null!=this.imageProxy&&(this.ctx.fillStyle=this.patternProxy,this.ctx.globalAlpha=1-this.alphaFactor,this.drawLayer(this.imageProxy)),null!=this.image?(this.ctx.fillStyle=this.pattern,this.ctx.globalAlpha=this.alphaFactor,this.drawLayer(this.image)):void 0},a.prototype.setImageDirect=function(a){return null!=this.image&&(this.imageProxy=this.image,this.patternProxy=this.pattern),this.image=a,this.pattern=this.ctx.createPattern(this.image,"repeat"),this.alphaFactor=0},a.prototype.setImage=function(a){var b,c=this;return"string"==typeof a?(b=new Image,b.src=a,b.onload=function(){return c.setImageDirect(b)}):this.setImageDirect(a)},a}()}).call(this);
+
+        // Initialize kaleidoscope
+        const container = $("#kaleidoscope-container");
+        const scope = new Graphemescope(container[0]);
+        let images = [];
+        let index = 0;
+        let autoAnimation = false;
+        let animationFrameId;
+        let sensitivity = 1.0;
+        let time = 0;
+        let isRecording = false;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let recordTimerId = null;
+        let recordStartTime = null;
+        const MAX_RECORDING_DURATION = 60;
+        const RECORDING_PX = 1280;
+
+        // Go back to main.html
+        function goBack() {
+            window.location.href = 'main.html';
+            if (window.innerWidth <= 768) toggleMenu();
+        }
+
+        // Toggle menu for mobile
+        function toggleMenu() {
+            $('.left-panel').toggleClass('hidden');
+        }
+
+        // Add image URL
+        function addImageUrl() {
+            const url = $("#image-url").val().trim();
+            if (url) {
+                images.push(url);
+                updateImageList();
+                if (images.length === 1) changePicture();
+                $("#image-url").val("");
+                if (window.innerWidth <= 768) toggleMenu();
+            }
+        }
+
+        // Add uploaded images
+        function addImageFiles() {
+            const files = $("#image-upload")[0].files;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    images.push(e.target.result);
+                    updateImageList();
+                    if (images.length === 1) changePicture();
+                };
+                reader.readAsDataURL(file);
+            }
+            $("#image-upload").val("");
+            if (window.innerWidth <= 768) toggleMenu();
+        }
+
+        // Delete image
+        function deleteImage(idx) {
+            images.splice(idx, 1);
+            if (index >= images.length) index = 0;
+            updateImageList();
+            if (images.length > 0) changePicture();
+            else scope.setImage(null);
+            if (window.innerWidth <= 768) toggleMenu();
+        }
+
+        // Update image list display
+        function updateImageList() {
+            const list = $("#image-list");
+            list.empty();
+            images.forEach((img, i) => {
+                list.append(`
+                    <li>
+                        <span>${img.substring(0, 30)}${img.length > 30 ? '...' : ''}</span>
+                        <button class="delete-btn" onclick="deleteImage(${i})" title="Удалить изображение">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </li>
+                `);
+            });
+        }
+
+        // Change picture
+        function changePicture() {
+            if (images.length > 0) {
+                scope.setImage(images[index]);
+                index = (index + 1) % images.length;
+            }
+        }
+
+        // Smooth auto animation
+        function animate() {
+            if (autoAnimation) {
+                time += 0.02 * sensitivity;
+                scope.angleTarget = 0.5 + 0.5 * Math.sin(time);
+                scope.zoomTarget = 1.0 + 0.5 * Math.sin(time * 0.7);
+                animationFrameId = requestAnimationFrame(animate);
+            }
+        }
+
+        // Toggle auto animation
+        function toggleAutoAnimation() {
+            autoAnimation = !autoAnimation;
+            const animateBtn = $("#animateBtn");
+            if (autoAnimation) {
+                animateBtn.html(`
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Остановить анимацию
+                `);
+                animateBtn.addClass("active");
+                animationFrameId = requestAnimationFrame(animate);
+            } else {
+                animateBtn.html(`
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.2A1 1 0 0010 9.768v4.464a1 1 0 001.555.832l3.197-2.2a1 1 0 000-1.664z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Переключить анимацию
+                `);
+                animateBtn.removeClass("active");
+                cancelAnimationFrame(animationFrameId);
+            }
+            if (window.innerWidth <= 768) toggleMenu();
+        }
+
+        // Update sensitivity
+        $("#sensitivity").on("input", function() {
+            sensitivity = parseFloat(this.value);
+            $("#sensitivity-value").text(sensitivity.toFixed(1));
+        });
+
+        // Format time for recording timer
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const secs = (seconds % 60).toString().padStart(2, '0');
+            return `${mins}:${secs}`;
+        }
+
+        // Update recording timer
+        function updateRecordTimer() {
+            if (isRecording) {
+                const elapsed = Math.floor((Date.now() - recordStartTime) / 1000);
+                $("#recordTimer").text(`Запись: ${formatTime(elapsed)}`);
+                if (elapsed >= MAX_RECORDING_DURATION) {
+                    stopRecording();
+                    alert(`Максимальная длительность записи (${MAX_RECORDING_DURATION} секунд) достигнута.`);
+                }
+            }
+        }
+
+        // Reset recording timer
+        function resetRecordTimer() {
+            $("#recordTimer").text('Запись: 00:00');
+            if (recordTimerId) {
+                clearInterval(recordTimerId);
+                recordTimerId = null;
+            }
+        }
+
+        // Start/stop recording
+        function startStopRecording() {
+            if (images.length === 0) {
+                alert('Сначала добавьте хотя бы одно изображение!');
+                return;
+            }
+            const recordBtn = $("#recordBtn");
+            const downloadVideoBtn = $("#downloadVideoBtn");
+            const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.4D401E') ? 'video/mp4;codecs=avc1.4D401E' : 'video/webm;codecs=vp9';
+            const fileExtension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
+            if (!isRecording) {
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    alert(`Формат ${fileExtension.toUpperCase()} не поддерживается вашим браузером. Попробуйте использовать Chrome.`);
+                    return;
+                }
+                if (!autoAnimation) {
+                    toggleAutoAnimation();
+                }
+                recordedChunks = [];
+                scope.domElement.width = RECORDING_PX;
+                scope.domElement.height = RECORDING_PX;
+                const stream = scope.domElement.captureStream(30);
+                try {
+                    mediaRecorder = new MediaRecorder(stream, {
+                        mimeType: mimeType,
+                        videoBitsPerSecond: 10000000
+                    });
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            recordedChunks.push(event.data);
+                        }
+                    };
+                    mediaRecorder.onstop = () => {
+                        downloadVideoBtn.prop("disabled", recordedChunks.length === 0);
+                        resetRecordTimer();
+                        scope.domElement.width = container[0].clientWidth;
+                        scope.domElement.height = container[0].clientHeight;
+                        scope.resizeHandler();
+                    };
+                    mediaRecorder.onerror = (event) => {
+                        console.error('MediaRecorder error:', event.error);
+                        alert('Ошибка записи видео: ' + event.error.message);
+                        stopRecording();
+                    };
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordBtn.html(`
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Остановить запись
+                    `);
+                    recordBtn.addClass("active");
+                    recordStartTime = Date.now();
+                    recordTimerId = setInterval(updateRecordTimer, 1000);
+                } catch (e) {
+                    console.error('Failed to start recording:', e);
+                    alert('Не удалось начать запись. Формат MP4 может не поддерживаться. Попробуйте использовать Chrome.');
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordBtn.html(`
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                    </svg>
+                    Начать запись
+                `);
+                recordBtn.removeClass("active");
+            }
+            if (window.innerWidth <= 768) toggleMenu();
+        }
+
+        // Download recorded video
+        function downloadVideo() {
+            if (recordedChunks.length === 0) {
+                alert('Нет записанного видео для скачивания!');
+                return;
+            }
+            const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.4D401E') ? 'video/mp4' : 'video/webm';
+            const fileExtension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
+            const blob = new Blob(recordedChunks, { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `калейдоскоп.${fileExtension}`;
+            link.click();
+            URL.revokeObjectURL(url);
+            recordedChunks = [];
+            $("#downloadVideoBtn").prop("disabled", true);
+            if (window.innerWidth <= 768) toggleMenu();
+        }
+
+        // Auto change picture
+        setInterval(changePicture, 6000);
+
+        // Mouse and touch move handler
+        function handleMove(event) {
+            if (!autoAnimation) {
+                const isTouch = event.type === 'touchmove';
+                const clientX = isTouch ? event.touches[0].clientX : event.pageX;
+                const clientY = isTouch ? event.touches[0].clientY : event.pageY;
+                const factorx = clientX / $(window).width();
+                const factory = clientY / $(window).height();
+                scope.angleTarget = factorx * sensitivity;
+                scope.zoomTarget = (1.0 + 0.5 * factory) * sensitivity;
+            }
+        }
+        $(window).on('mousemove', handleMove);
+        $(window).on('touchmove', handleMove);
+
+        // Resize handler
+        const resizeHandler = function() {
+            if (!isRecording) {
+                const canvasWidth = container[0].clientWidth;
+                const canvasHeight = container[0].clientHeight;
+                scope.domElement.width = canvasWidth;
+                scope.domElement.height = canvasHeight;
+                scope.resizeHandler();
+            }
+        };
+
+        $(window).resize(resizeHandler);
+        $(window).resize();
+
+        container.click(changePicture);
+
+        // Initialize menu state based on screen size
+        if (window.innerWidth > 768) {
+            $('.left-panel').removeClass('hidden');
+        }
+    </script>
+</body>
+</html>

@@ -580,8 +580,8 @@ class World{
   setupColorPicker(){
     const picker = document.getElementById('colorPicker');
     const toggleBtn = document.createElement('button');
-    toggleBtn.innerHTML = 'Palette';
-    toggleBtn.style.cssText = 'position:fixed;top:20px;right:20px;z-index:101;background:#fff;border:none;border-radius:50%;width:56px;height:56px;cursor:pointer;font-weight:bold;box-shadow:0 4px 15px rgba(0,0,0,0.4);';
+    toggleBtn.innerHTML = 'Цвет';
+    toggleBtn.style.cssText = 'position:fixed;top:20px;right:20px;z-index:101;background:red;border:none;border-radius:50%;width:56px;height:56px;cursor:pointer;font-weight:bold;box-shadow:0 4px 15px rgba(0,0,0,0.4);';
     document.body.appendChild(toggleBtn);
 
     toggleBtn.onclick = () => {

@@ -1,703 +1,1191 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>16 Зрелищных Калейдоскопов – Плавный Шар</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; height: 100vh; overflow: hidden;
-      background: linear-gradient(135deg, #0a0a2e 0%, #1a1a4e 50%, #000 100%);
-      cursor: grab; font-family: 'Roboto', sans-serif;
-      color: white; user-select: none;
-    }
-    body:active { cursor: grabbing; }
-    body.picking { cursor: crosshair; }
-    .panel {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.8); backdrop-filter: blur(20px);
-      padding: 16px 20px; border-radius: 24px; display: flex; gap: 12px; align-items: center;
-      box-shadow: 0 10px 50px rgba(0,0,0,0.8); z-index: 100;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    button {
-      padding: 12px 18px; font: 600 15px/1 'Roboto', sans-serif;
-      background: linear-gradient(45deg, #1a1a99, #2a2abb); color: #fff;
-      border: none; border-radius: 16px; cursor: pointer; transition: all .3s ease;
-      box-shadow: 0 4px 15px rgba(26,26,153,0.3);
-    }
-    button:hover {
-      transform: scale(1.05); box-shadow: 0 8px 25px rgba(26,26,153,0.6);
-      background: linear-gradient(45deg, #2a2abb, #3a3add);
-    }
-    button.active {
-      background: linear-gradient(45deg, #3a3add, #4a4aff); box-shadow: 0 6px 20px rgba(58,58,221,0.5);
-    }
-    .mode-btn { padding: 10px 14px; font-size: 13px; }
-    #patternList {
-      display: none; position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.9); backdrop-filter: blur(20px);
-      padding: 20px; border-radius: 20px; max-width: 90vw; overflow-x: auto;
-      box-shadow: 0 10px 50px rgba(0,0,0,0.8); z-index: 99;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    #patternList.active { display: block; }
-    .pattern-grid { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-    .pattern-btn {
-      padding: 8px 12px; font-size: 12px; background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; cursor: pointer;
-      transition: all .3s; min-width: 60px; text-align: center;
-    }
-    .pattern-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
-    .pattern-btn.active { background: rgba(58,58,221,0.8); border-color: #4a4aff; }
-    #colorPicker {
-      position: fixed; top: 20px; right: 20px; width: 280px; height: 280px;
-      background: #fff; border-radius: 16px; cursor: crosshair; z-index: 100;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.6); transition: .3s; display: none;
-      border: 5px solid #fff;
-    }
-    #colorPicker.active { display: block; }
-    #colorPicker:hover { transform: scale(1.02); }
-    @media (max-width: 768px) {
-      .panel { flex-direction: column; gap: 8px; padding: 12px 16px; bottom: 10px; }
-      button { padding: 10px 14px; font-size: 14px; }
-      #patternList { bottom: 120px; padding: 16px; max-width: 95vw; }
-      .pattern-grid { gap: 8px; }
-      .pattern-btn { padding: 6px 8px; font-size: 11px; min-width: 50px; }
-      #colorPicker { width: 240px; height: 240px; top: 10px; right: 10px; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор калейдоскопов в 3D</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+        <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.138.0/build/three.module.js",
+                "OrbitControls": "https://unpkg.com/three@0.138.0/examples/jsm/controls/OrbitControls.js"
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #6b7280, #4c1d95);
+            min-height: 100vh;
+        }
+        #previewContainer, #fullContainer {
+            width: 100%;
+            max-width: 300px;
+            aspect-ratio: 1/1;
+            margin: auto;
+        }
+        #fullContainer {
+            max-width: 800px;
+        }
+        canvas {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .color-btn {
+            width: 100%;
+            height: 36px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            transition: transform 0.2s;
+        }
+        .color-btn:hover {
+            transform: scale(1.05);
+        }
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 6px;
+            border-radius: 6px;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        #backgroundColorPreview {
+            width: 100%;
+            height: 36px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+}
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+        .custom-range::-webkit-slider-thumb {
+            background: #7c3aed;
+        }
+        .custom-range::-moz-range-thumb {
+            background: #7c3aed;
+        }
+        #imageModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        #imageModal.show {
+            display: flex;
+        }
+        details summary {
+            cursor: pointer;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #4c1d95;
+            padding: 0.5rem;
+        }
+        details summary:hover {
+            color: #7c3aed;
+        }
+        details p {
+            margin-top: 0.5rem;
+            color: #374151;
+        }
+        #animateBtn, #recordBtn {
+            background: linear-gradient(45deg, #7c3aed, #4c1d95);
+            color: white;
+            transition: transform 0.3s, background 0.3s;
+        }
+        #animateBtn:hover, #recordBtn:hover {
+            transform: scale(1.05);
+            background: linear-gradient(45deg, #9f67ff, #6b46c1);
+        }
+        #animateBtn.active, #recordBtn.active {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.75rem;
+        }
+        .action-buttons button {
+            flex: 1;
+            padding: 0.75rem;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
-<body>
-
-<div class="panel">
-  <button class="mode-btn active" id="moleculeBtn">Молекула</button>
-  <button class="mode-btn" id="carpetBtn">Калейдоскоп</button>
-  <button id="patternBtn">Новый узор</button>
-  <button"><a href="https://davelynch-lab.github.io/colorsites/main.html">Назад</a></button>
-</div>
-
-<div id="patternList">
-  <div class="pattern-grid">
-    <button class="pattern-btn active" data-type="0">Звёзды</button>
-    <button class="pattern-btn" data-type="1">Лотос</button>
-    <button class="pattern-btn" data-type="2">Ромбы</button>
-    <button class="pattern-btn" data-type="3">Круги</button>
-    <button class="pattern-btn" data-type="4">Арабески</button>
-    <button class="pattern-btn" data-type="5">Галактика</button>
-    <button class="pattern-btn" data-type="6">Квадраты</button>
-    <button class="pattern-btn" data-type="7">Треугольники</button>
-    <button class="pattern-btn" data-type="8">Мандала</button>
-    <button class="pattern-btn" data-type="9">Кристалл</button>
-    <button class="pattern-btn" data-type="10">Волны</button>
-    <button class="pattern-btn" data-type="11">Фрактал</button>
-    <button class="pattern-btn" data-type="12">Пыль</button>
-    <button class="pattern-btn" data-type="13">Восток</button>
-    <button class="pattern-btn" data-type="14">Поле</button>
-    <button class="pattern-btn" data-type="15">Вихрь</button>
-    <button class="pattern-btn" data-type="16">Линии</button>
-    <button class="pattern-btn" data-type="17">Точки</button>
-    <button class="pattern-btn" data-type="18">Фигуры</button>
-    <button class="pattern-btn" data-type="19">Смешанный</button>
-    <button class="pattern-btn" data-type="20">Спираль</button>
-    <button class="pattern-btn" data-type="21">Орбиты</button>
-    <button class="pattern-btn" data-type="22">Точки в Фигуры</button>
-    <button class="pattern-btn" data-type="23">Точки в Смешанный</button>
-  </div>
-</div>
-
-<div id="colorPicker"></div>
-
-<!-- ШЕЙДЕР ДЛЯ КОВРА (24 УЗОРА) -->
-<script id="kaleido-vs" type="x-shader/x-vertex">
-  uniform float time;
-  uniform float seed;
-  varying vec2 vUv;
-  varying vec3 vNormal;
-  varying vec3 vPos;
-
-  float hash(float n) { return fract(sin(n)*43758.5453); }
-
-  void main() {
-    vUv = uv;
-    vNormal = normalize(normalMatrix * normal);
-    vPos = position;
-
-    float pulse = sin(time * 1.2 + seed) * 0.015;
-    vec3 pos = position * (1.0 + pulse * 0.03);
-
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-  }
-</script>
-
-<script id="kaleido-fs" type="x-shader/x-fragment">
-  uniform vec3 color;
-  uniform float time;
-  uniform float seed;
-  uniform float patternType;
-  varying vec2 vUv;
-  varying vec3 vNormal;
-
-  float hash(float n) { return fract(sin(n)*43758.5453); }
-  float hash2(vec2 p) { return hash(dot(p, vec2(12.9898, 78.233))); }
-
-  vec2 kaleido(vec2 uv, float segments) {
-    float angle = atan(uv.y, uv.x);
-    float radius = length(uv);
-    angle = mod(angle, 6.28318 / segments) * segments;
-    angle = min(angle, 6.28318 / segments - angle);
-    return vec2(cos(angle), sin(angle)) * radius;
-  }
-
-  // === 24 УЗОРА (старые + новые из 2D) ===
-  float pattern1(vec2 uv, float t, float s) { // Звёздное небо
-    uv = kaleido(uv, 8.0);
-    uv *= 6.0 + hash(s)*3.0;
-    vec2 gv = fract(uv) - 0.5;
-    float star = length(gv);
-    float arms = abs(sin(atan(gv.y, gv.x)*5.0));
-    star = smoothstep(0.15, 0.14, star) * smoothstep(0.4, 0.6, arms);
-    float glow = smoothstep(0.3, 0.15, star);
-    return star + glow * 0.4;
-  }
-
-  float pattern2(vec2 uv, float t, float s) { // Лотос
-    uv = kaleido(uv, 6.0);
-    uv *= 5.0 + hash(s+1.0)*4.0;
-    vec2 gv = fract(uv) - 0.5;
-    float flower = 0.0;
-    for(float i = 0.0; i < 6.0; i++) {
-      float a = i * 1.0472;
-      vec2 off = vec2(cos(a), sin(a)) * 0.25;
-      float petal = smoothstep(0.12, 0.08, length(gv - off));
-      flower = max(flower, petal);
+<body class="font-sans text-gray-900">
+    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-7xl">
+        <details class="card p-4 rounded-xl shadow-lg mb-6">
+            <summary>Инструкции</summary>
+            <p>Добро пожаловать в Генератор калейдоскопов в 3D! Следуйте этим шагам:</p>
+            <ul class="list-disc pl-5 mt-2">
+                <li><strong>Выбор узора:</strong> Выберите тип узора (Линии, Точки, Фигуры, Смешанный, Ветви, Спираль, Орбиты, Точки в Фигуры).</li>
+                <li><strong>Настройка параметров:</strong> Регулируйте количество элементов (100–1000), секторов (3–40) и скорость анимации (0.05–0.5).</li>
+                <li><strong>Палитра:</strong> Добавляйте до 20 цветов, удаляйте или изменяйте их.</li>
+                <li><strong>Генерация:</strong> Нажмите "Сгенерировать" для создания узора внутри 3D сферы.</li>
+                <li><strong>Анимация:</strong> Нажмите "Анимировать" для запуска плавной анимации. Повторное нажатие останавливает.</li>
+                <li><strong>Запись видео:</strong> Нажмите "Старт/Стоп запись" для записи анимации. Нажмите "Скачать видео" для сохранения в MP4.</li>
+                <li><strong>Просмотр:</strong> Нажмите "Открыть полное изображение" для просмотра анимированного узора в 3D с возможностью вращения.</li>
+                <li><strong>Сохранение:</strong> Нажмите "Сохранить изображение" для скачивания PNG (статичное изображение).</li>
+                <li><strong>Возврат:</strong> Нажмите "← Вернуться" для возврата на главную.</li>
+            </ul>
+        </details>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-white mb-8 drop-shadow-lg">Генератор калейдоскопов в 3D</h1>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="space-y-6">
+                <div class="card p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold mb-4 text-indigo-700">Настройки узора</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-gray-700">Тип узора</label>
+                            <select id="modeCombo" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500" title="Выберите тип узора">
+                                <option>Линии</option>
+                                <option>Точки</option>
+                                <option>Фигуры</option>
+                                <option>Смешанный</option>
+                                <!-- <option>Ветви</option> -->
+                                <option>Спираль</option>
+                                <option>Орбиты</option>
+                                <option>Точки в Фигуры</option>
+                                <option>Точки в Смешанный</option>
+                                <option value="Crystal"><a href="kalei.html">Кристаллическое (избранное)</a></option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-gray-700">Количество элементов: <span id="elementValue" class="font-bold">300</span></label>
+                            <input type="range" id="elementSlider" min="100" max="1000" value="300" class="w-full custom-range" title="Количество элементов">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-gray-700">Количество секторов: <span id="slicesValue" class="font-bold">13</span></label>
+                            <input type="range" id="slicesSlider" min="3" max="40" value="13" class="w-full custom-range" title="Количество секторов">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-gray-700">Скорость анимации: <span id="animationSpeedValue" class="font-bold">0.1</span></label>
+                            <input type="range" id="animationSpeedSlider" min="0.05" max="0.5" step="0.01" value="0.1" class="w-full custom-range" title="Скорость анимации">
+                        </div>
+                    </div>
+                </div>
+                <div class="card p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold mb-4 text-indigo-700">Палитра цветов</h2>
+                    <div class="overflow-x-auto">
+                        <table id="paletteTable" class="w-full border-collapse mb-4">
+                            <thead>
+                                <tr>
+                                    <th class="border-b-2 p-3 text-left text-gray-700 w-16">Ключ</th>
+                                    <th class="border-b-2 p-3 text-left text-gray-700">Цвет</th>
+                                    <th class="border-b-2 p-3 text-left text-gray-700 w-24">Действие</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button id="addColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors" title="Добавить цвет">Добавить цвет</button>
+                        <button id="removeColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors" title="Удалить последний цвет">Удалить последний</button>
+                        <button id="changeBackgroundColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors" title="Изменить цвет фона">Выбрать цвет фона</button>
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-6">
+                <div class="card p-6 rounded-xl shadow-lg flex justify-center items-center">
+                    <div>
+                        <h2 class="text-xl font-semibold mb-4 text-indigo-700 text-center">Предпросмотр (3D сфера)</h2>
+                        <div id="previewContainer"></div> <!-- Контейнер для 3D предпросмотра -->
+                    </div>
+                </div>
+                <div class="card p-6 rounded-xl shadow-lg">
+                    <div class="action-buttons">
+                        <button id="generateBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Создать узор">Сгенерировать</button>
+                        <button id="animateBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Запустить/остановить анимацию">Анимировать</button>
+                        <button id="recordBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Начать/остановить запись видео">Старт запись</button>
+                        <button id="downloadVideoBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Скачать записанное видео" disabled>Скачать видео</button>
+                        <button id="viewBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Открыть узор">Открыть полное изображение</button>
+                        <button id="saveBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Сохранить узор">Сохранить изображение</button>
+                        <span id="recordTimer" class="text-gray-700 font-medium">Запись: 00:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button id="home" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors" style="margin-top: 20px;" title="Вернуться">← Вернуться</button>
+        <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center p-4 z-50">
+            <div class="bg-white p-6 rounded-xl max-w-[90vw] max-h-[90vh] overflow-auto">
+                <div id="fullContainer"></div> <!-- Контейнер для полного 3D вида -->
+                <div class="text-center mt-4">
+                    <button id="closeModalBtn" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors" title="Закрыть">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module">
+       import * as THREE from 'https://unpkg.com/three@0.128.0/build/three.module.js';
+import { OrbitControls } from 'https://unpkg.com/three@0.128.0/examples/jsm/controls/OrbitControls.js';
+       const DPI = 300;
+const CM_TO_INCH = 1 / 2.54;
+const MAIN_CM = 15;
+const MAIN_PX = Math.round(MAIN_CM * CM_TO_INCH * DPI);
+const CANVAS_PX = 512; // Увеличили для лучшей текстуры в 3D
+const MOBILE_RECORDING_PX = 1280;
+const MAX_RECORDING_DURATION = 60;
+let ANIMATION_SPEED = 0.1;
+let backgroundColor = [255, 255, 255, 1]; // По умолчанию белый цвет фона
+const DEFAULT_PALETTE = {
+    '1': [245, 245, 220, 1],
+    '2': [0, 0, 0, 1],
+    '3': [255, 255, 0, 1],
+    '4': [255, 0, 255, 1]
+};
+const AVAILABLE_COLORS = [
+    [245, 245, 220, 1],
+    [255, 255, 0, 1],
+    [0, 0, 0, 1],
+    [255, 0, 255, 1],
+    [144, 238, 144, 1]
+];
+let colorIndex = 0;
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+class KaleidoGenerator {
+    constructor(size_px, palette, mode = 'Lines', sectors = 12, elements = 300, slices = 13) {
+        this.size = size_px;
+        this.palette = Object.values(palette);
+        this.mode = mode;
+        this.sectors = sectors;
+        this.elements = Math.min(elements, 500);
+        this.slices = slices;
+        this.branch_settings = {
+            size: 150,
+            angle: 0.4,
+            scale: 0.67,
+            iterations: Math.max(1, Math.floor(elements / 100)),
+            offset: 0,
+            spiral_density: 0.05,
+        };
+        this.elementsData = [];
+        this.initElements();
     }
-    float center = smoothstep(0.08, 0.06, length(gv));
-    return max(flower, center);
-  }
-
-  float pattern3(vec2 uv, float t, float s) { // Ромбы
-    uv = kaleido(uv, 4.0);
-    uv *= 7.0 + hash(s+2.0)*2.0;
-    vec2 gv = fract(uv) - 0.5;
-    float diamond = abs(gv.x) + abs(gv.y);
-    float inner = smoothstep(0.3, 0.28, diamond);
-    float border = 1.0 - smoothstep(0.32, 0.34, diamond);
-    return inner * border;
-  }
-
-  float pattern4(vec2 uv, float t, float s) { // Пульсирующие круги
-    uv = kaleido(uv, 8.0);
-    uv *= 6.0 + hash(s+3.0)*3.0;
-    vec2 gv = fract(uv) - 0.5;
-    float r = length(gv);
-    float ring = abs(r - 0.2);
-    float circle = smoothstep(0.05, 0.04, ring);
-    float pulse = sin(t * 3.0 + hash(s+4.0)*6.28) * 0.02;
-    return circle + smoothstep(0.06, 0.0, abs(ring - 0.02 - pulse));
-  }
-
-  float pattern5(vec2 uv, float t, float s) { // Арабески
-    uv = kaleido(uv, 10.0);
-    uv *= 5.0 + hash(s+5.0)*4.0;
-    vec2 gv = fract(uv) - 0.5;
-    float curve = sin(gv.x * 20.0 + t * 1.5) * 0.3;
-    float line = abs(gv.y - curve);
-    float pattern = smoothstep(0.08, 0.06, line);
-    float dot = smoothstep(0.1, 0.08, length(gv));
-    return max(pattern, dot);
-  }
-
-  float pattern6(vec2 uv, float t, float s) { // Спиральная галактика
-    uv = kaleido(uv, 8.0);
-    float r = length(uv);
-    float a = atan(uv.y, uv.x);
-    float spiral = sin(r * 15.0 - a * 8.0 + t * 2.5);
-    float thick = smoothstep(0.1, 0.08, abs(spiral));
-    float core = smoothstep(0.3, 0.0, r);
-    return thick + core * 0.5;
-  }
-
-  float pattern7(vec2 uv, float t, float s) { // Квадраты
-    uv = kaleido(uv, 8.0);
-    uv *= 6.0 + hash(s + 6.0) * 3.0;
-    vec2 gv = fract(uv) - 0.5;
-    float box = max(abs(gv.x), abs(gv.y));
-    return 1.0 - smoothstep(0.4, 0.42, box);
-  }
-
-  float pattern8(vec2 uv, float t, float s) { // Треугольники
-    uv = kaleido(uv, 6.0);
-    uv *= 6.0 + hash(s+7.0)*3.0;
-    vec2 gv = fract(uv) - 0.5;
-    float tri = abs(gv.x * 1.732) + abs(gv.y);
-    float shape = smoothstep(0.35, 0.34, tri);
-    float fill = 1.0 - smoothstep(0.36, 0.37, tri);
-    return shape * fill;
-  }
-
-  float pattern9(vec2 uv, float t, float s) { // Неоновая мандала
-    uv = kaleido(uv, 12.0);
-    uv *= 4.0 + hash(s+8.0)*3.0;
-    vec2 gv = fract(uv) - 0.5;
-    float r = length(gv);
-    float ring1 = smoothstep(0.05, 0.04, abs(r - 0.15));
-    float ring2 = smoothstep(0.05, 0.04, abs(r - 0.25));
-    float pulse = sin(t * 4.0 + r * 10.0) * 0.5 + 0.5;
-    return max(ring1, ring2) * pulse;
-  }
-
-  float pattern10(vec2 uv, float t, float s) { // Кристалл
-    uv = kaleido(uv, 6.0);
-    uv *= 7.0 + hash(s+9.0)*3.0;
-    vec2 gv = fract(uv) - 0.5;
-    float edge = max(abs(gv.x), abs(gv.y));
-    float facet = smoothstep(0.2, 0.18, edge);
-    float shine = pow(smoothstep(0.1, 0.0, abs(gv.x + gv.y)), 2.0);
-    return facet + shine * 0.5;
-  }
-
-  float pattern11(vec2 uv, float t, float s) { // Волны времени
-    uv = kaleido(uv, 6.0);
-    uv *= 5.0 + hash(s+10.0)*3.0;
-    vec2 gv = fract(uv) - 0.5;
-    float wave = sin(gv.x * 15.0 + t * 3.0) * sin(gv.y * 15.0 + t * 2.5);
-    return smoothstep(0.7, 0.8, wave);
-  }
-
-  float pattern12(vec2 uv, float t, float s) { // Фрактальный цветок
-    uv = kaleido(uv, 8.0);
-    uv *= 6.0 + hash(s+11.0)*3.0;
-    vec2 gv = fract(uv) - 0.5;
-    float f = 0.0;
-    for(float i = 1.0; i < 4.0; i++) {
-      vec2 off = vec2(cos(i*1.57), sin(i*1.57)) * (0.15 / i);
-      f = max(f, smoothstep(0.08/i, 0.06/i, length(gv - off)));
+    initElements() {
+        this.elementsData = [];
+        const angle = 360 / this.sectors;
+        if (this.mode === 'Lines') {
+            for (let i = 0; i < this.elements; i++) {
+                this.elementsData.push({
+                    r1: Math.random(),
+                    theta1: (Math.random() * angle - angle / 2) * Math.PI / 180,
+                    r2: Math.random(),
+                    theta2: (Math.random() * angle - angle / 2) * Math.PI / 180,
+                    colorIdx: Math.floor(Math.random() * this.palette.length),
+                    lineWidth: Math.floor(Math.random() * 4) + 1
+                });
+            }
+        } else if (this.mode === 'Dots') {
+            for (let i = 0; i < this.elements; i++) {
+                this.elementsData.push({
+                    r: Math.random(),
+                    theta: (Math.random() * angle - angle / 2) * Math.PI / 180,
+                    colorIdx: Math.floor(Math.random() * this.palette.length),
+                    size_dot: Math.random() * 6 + 2
+                });
+            }
+        } else if (this.mode === 'Shapes') {
+            for (let i = 0; i < this.elements; i++) {
+                this.elementsData.push({
+                    r: Math.random(),
+                    theta: (Math.random() * angle - angle / 2) * Math.PI / 180,
+                    colorIdx: Math.floor(Math.random() * this.palette.length),
+                    size_sq: Math.random() * 15 + 5
+                });
+            }
+        } else if (this.mode === 'Mixed') {
+            for (let i = 0; i < this.elements; i++) {
+                const type = ['Lines', 'Dots', 'Shapes'][Math.floor(Math.random() * 3)];
+                if (type === 'Lines') {
+                    this.elementsData.push({
+                        type: 'Lines',
+                        r1: Math.random(),
+                        theta1: (Math.random() * angle - angle / 2) * Math.PI / 180,
+                        r2: Math.random(),
+                        theta2: (Math.random() * angle - angle / 2) * Math.PI / 180,
+                        colorIdx: Math.floor(Math.random() * this.palette.length),
+                        lineWidth: Math.floor(Math.random() * 4) + 1
+                    });
+                } else if (type === 'Dots') {
+                    this.elementsData.push({
+                        type: 'Dots',
+                        r: Math.random(),
+                        theta: (Math.random() * angle - angle / 2) * Math.PI / 180,
+                        colorIdx: Math.floor(Math.random() * this.palette.length),
+                        size_dot: Math.random() * 6 + 2
+                    });
+                } else {
+                    this.elementsData.push({
+                        type: 'Shapes',
+                        r: Math.random(),
+                        theta: (Math.random() * angle - angle / 2) * Math.PI / 180,
+                        colorIdx: Math.floor(Math.random() * this.palette.length),
+                        size_sq: Math.random() * 15 + 5
+                    });
+                }
+            }
+        } else if (this.mode === 'Spiral') {
+            const spiral_count = Math.floor(this.elements / 10);
+            for (let i = 0; i < spiral_count; i++) {
+                this.elementsData.push({
+                    theta_start: (Math.random() * angle - angle / 2) * Math.PI / 180,
+                    color_idx: Math.floor(Math.random() * this.palette.length)
+                });
+            }
+        } else if (this.mode === 'Orbit') {
+            const diameter = this.size;
+            const a = 0.266746, b = 0.321596, c = 0.223138;
+            this.elementsData = [
+                { class: 'a', width: diameter * a, top: (diameter/2 - (diameter*a/2)) * 0.60, left: diameter/2 - (diameter*a/2), blink: 'blink-lightest', speed: 5*a, delay: 2*a },
+                { class: 'a', width: diameter * a, top: (diameter/2 - (diameter*a/2)) * 1.22, left: (diameter/2 - (diameter*a/2)) * 0.65, blink: 'blink-lightest', speed: 5*a, delay: 1*a },
+                { class: 'a', width: diameter * a, top: (diameter/2 - (diameter*a/2)) * 1.22, right: (diameter/2 - (diameter*a/2)) * 0.65, blink: 'blink-lightest', speed: 5*a, delay: 1*a },
+                { class: 'b', width: diameter * b, top: (diameter/2 - (diameter*b/2)) * 0.52, left: diameter*b/7, blink: 'blink-lightest', speed: 5*b, delay: 1*b },
+                { class: 'b', width: diameter * b, top: (diameter/2 - (diameter*b/2)) * 0.52, right: diameter*b/7, blink: 'blink-lightest', speed: 5*b, delay: 1*b },
+                { class: 'b', width: diameter * b, bottom: 0, left: diameter/2 - (diameter*b/2), blink: 'blink', speed: 5*b, delay: 2*b },
+                { class: 'c', width: diameter * c, top: diameter*c/15, left: diameter*c * 1.23, blink: 'blink-lightest', speed: 6*c, delay: 3*c },
+                { class: 'c', width: diameter * c, top: diameter*c/15, right: diameter*c * 1.23, blink: 'blink-lightest', speed: 6*c, delay: 2*c },
+                { class: 'c', width: diameter * c, bottom: diameter*c/2.3, left: diameter*c * 0.55, blink: 'blink-lightest', speed: 6*c, delay: 4*c },
+                { class: 'c', width: diameter * c, bottom: diameter*c * 1.3, left: diameter*c * 0.05, blink: 'blink-lightest', speed: 6*c, delay: 3*c },
+                { class: 'c', width: diameter * c, bottom: diameter*c/2.3, right: diameter*c * 0.55, blink: 'blink-lightest', speed: 6*c, delay: 2*c },
+                { class: 'c', width: diameter * c, bottom: diameter*c * 1.3, right: diameter*c * 0.05, blink: 'blink-lightest', speed: 6*c, delay: 3*c },
+                { class: 'center', width: diameter * a, top: diameter/2 - (diameter*a/2), left: diameter/2 - (diameter*a/2), blink: 'blink', speed: 3, delay: 0 },
+                { class: 'tile-cover', width: diameter, top: 0, left: 0, blink: 'blink', speed: 3, delay: 1 },
+                { class: 'tile-back', width: diameter, top: 0, left: 0, blink: 'blink', speed: 5, delay: 2 },
+            ];
+        } else if (this.mode === 'DotToShape') {
+            for (let i = 0; i < this.elements; i++) {
+                this.elementsData.push({
+                    r: Math.random(),
+                    theta: (Math.random() * angle - angle / 2) * Math.PI / 180,
+                    colorIdx: Math.floor(Math.random() * this.palette.length),
+                    size_dot: Math.random() * 6 + 2,
+                    size_sq: Math.random() * 15 + 5
+                });
+            }
+        } else if (this.mode === 'DotsToMixed') {
+            for (let i = 0; i < this.elements; i++) {
+                const type = ['Lines', 'Dots', 'Shapes'][Math.floor(Math.random() * 3)];
+                this.elementsData.push({
+                    r: Math.random(),
+                    theta: (Math.random() * angle - angle / 2) * Math.PI / 180,
+                    colorIdx: Math.floor(Math.random() * this.palette.length),
+                    size_dot: Math.random() * 6 + 2,
+                    type: type,
+                    r1: type === 'Lines' ? Math.random() : null,
+                    theta1: type === 'Lines' ? (Math.random() * angle - angle / 2) * Math.PI / 180 : null,
+                    r2: type === 'Lines' ? Math.random() : null,
+                    theta2: type === 'Lines' ? (Math.random() * angle - angle / 2) * Math.PI / 180 : null,
+                    lineWidth: type === 'Lines' ? Math.floor(Math.random() * 4) + 1 : null,
+                    size_sq: type === 'Shapes' ? Math.random() * 15 + 5 : null
+                });
+            }
+        }
     }
-    return f;
-  }
-
-  float pattern13(vec2 uv, float t, float s) { // Космическая пыль
-    uv = kaleido(uv, 10.0);
-    uv *= 8.0 + hash(s+12.0)*4.0;
-    vec2 gv = fract(uv) - 0.5;
-    float dust = hash2(gv + s);
-    float star = smoothstep(0.95, 0.98, dust);
-    float glow = smoothstep(0.9, 0.95, dust);
-    return star + glow * 0.3;
-  }
-
-  float pattern14(vec2 uv, float t, float s) { // Восточный узор
-    uv = kaleido(uv, 8.0);
-    uv *= 5.0 + hash(s+13.0)*3.0;
-    vec2 gv = fract(uv) - 0.5;
-    float curve1 = sin(gv.x * 18.0 + t * 1.2) * 0.25;
-    float curve2 = sin(gv.y * 18.0 + t * 1.5) * 0.25;
-    float line1 = abs(gv.y - curve1);
-    float line2 = abs(gv.x - curve2);
-    float pattern = smoothstep(0.07, 0.05, min(line1, line2));
-    return pattern;
-  }
-
-  float pattern15(vec2 uv, float t, float s) { // Энергетическое поле
-    uv = kaleido(uv, 4.0);
-    uv *= 10.0 + hash(s+14.0)*3.0;
-    vec2 gv = fract(uv) - 0.5;
-    float grid = abs(sin(gv.x * 20.0) * sin(gv.y * 20.0));
-    float flash = sin(t * 5.0 + length(gv) * 10.0) * 0.5 + 0.5;
-    return smoothstep(0.6, 0.8, grid) * flash;
-  }
-
-  float pattern16(vec2 uv, float t, float s) { // Вихрь (улучшенная спираль)
-    uv = kaleido(uv, 8.0);
-    float r = length(uv);
-    float a = atan(uv.y, uv.x);
-    float spiral = sin(r * 20.0 - a * 10.0 + t * 3.0);
-    float thick = smoothstep(0.15, 0.12, abs(spiral));
-    float core = smoothstep(0.25, 0.0, r);
-    return thick + core * 0.3;
-  }
-
-  float pattern17(vec2 uv, float t, float s) { // Линии
-    uv = kaleido(uv, 10.0);
-    uv *= 5.0 + hash(s)*2.0;
-    vec2 gv = fract(uv) - 0.5;
-    float line = abs(gv.y);
-    return smoothstep(0.05, 0.03, line);
-  }
-
-  float pattern18(vec2 uv, float t, float s) { // Точки
-    uv = kaleido(uv, 12.0);
-    uv *= 6.0 + hash(s+1.0)*2.0;
-    vec2 gv = fract(uv) - 0.5;
-    float dot = length(gv);
-    return smoothstep(0.02, 0.01, dot);
-  }
-
-  float pattern19(vec2 uv, float t, float s) { // Фигуры (квадраты)
-    uv = kaleido(uv, 8.0);
-    uv *= 7.0 + hash(s+2.0)*2.0;
-    vec2 gv = fract(uv) - 0.5;
-    float box = max(abs(gv.x), abs(gv.y));
-    return smoothstep(0.3, 0.28, box);
-  }
-
-  float pattern20(vec2 uv, float t, float s) { // Смешанный
-    float p1 = pattern17(uv, t, s);
-    float p2 = pattern18(uv, t, s + 1.0);
-    float p3 = pattern19(uv, t, s + 2.0);
-    return max(p1, max(p2, p3)) * 0.8;
-  }
-
-  float pattern21(vec2 uv, float t, float s) { // Спираль
-    uv = kaleido(uv, 8.0);
-    float r = length(uv);
-    float a = atan(uv.y, uv.x);
-    float spiral = sin(r * 15.0 - a * 8.0 + t * 2.5);
-    return smoothstep(0.1, 0.08, abs(spiral));
-  }
-
-  float pattern22(vec2 uv, float t, float s) { // Орбиты (круги)
-    uv = kaleido(uv, 12.0);
-    float r = length(uv);
-    float ring = abs(r - 0.2);
-    return smoothstep(0.05, 0.04, ring);
-  }
-
-  float pattern23(vec2 uv, float t, float s) { // Точки в Фигуры (морфинг)
-    uv = kaleido(uv, 10.0);
-    uv *= 6.0 + hash(s)*2.0;
-    vec2 gv = fract(uv) - 0.5;
-    float dot = length(gv);
-    float box = max(abs(gv.x), abs(gv.y));
-    float morph = sin(t * 3.0) * 0.5 + 0.5;
-    float pat = mix(dot, box, morph);
-    return smoothstep(0.15, 0.14, pat);
-  }
-
-  float pattern24(vec2 uv, float t, float s) { // Точки в Смешанный
-    float p1 = pattern18(uv, t, s);
-    float p2 = pattern20(uv, t, s + 1.0);
-    float morph = sin(t * 3.0) * 0.5 + 0.5;
-    return mix(p1, p2, morph);
-  }
-
-  float getPattern(vec2 uv, float t, float s, float type) {
-    int idx = int(type);
-    if(idx == 0) return pattern1(uv, t, s);
-    if(idx == 1) return pattern2(uv, t, s);
-    if(idx == 2) return pattern3(uv, t, s);
-    if(idx == 3) return pattern4(uv, t, s);
-    if(idx == 4) return pattern5(uv, t, s);
-    if(idx == 5) return pattern6(uv, t, s);
-    if(idx == 6) return pattern7(uv, t, s);
-    if(idx == 7) return pattern8(uv, t, s);
-    if(idx == 8) return pattern9(uv, t, s);
-    if(idx == 9) return pattern10(uv, t, s);
-    if(idx == 10) return pattern11(uv, t, s);
-    if(idx == 11) return pattern12(uv, t, s);
-    if(idx == 12) return pattern13(uv, t, s);
-    if(idx == 13) return pattern14(uv, t, s);
-    if(idx == 14) return pattern15(uv, t, s);
-    if(idx == 15) return pattern16(uv, t, s);
-    if(idx == 16) return pattern17(uv, t, s);
-    if(idx == 17) return pattern18(uv, t, s);
-    if(idx == 18) return pattern19(uv, t, s);
-    if(idx == 19) return pattern20(uv, t, s);
-    if(idx == 20) return pattern21(uv, t, s);
-    if(idx == 21) return pattern22(uv, t, s);
-    if(idx == 22) return pattern23(uv, t, s);
-    if(idx == 23) return pattern24(uv, t, s);
-    return pattern1(uv, t, s); // fallback
-  }
-
-  void main() {
-    vec2 uv = vUv * 2.0 - 1.0;
-    float pat = getPattern(uv, time, seed, patternType);
-    vec3 lightDir = normalize(vec3(0.7, 1.0, 0.8));
-    float diff = max(dot(vNormal, lightDir), 0.0);
-    float ambient = 0.35;
-    float spec = pow(max(dot(reflect(-lightDir, vNormal), normalize(vec3(0,0,1))), 0.0), 32.0) * 0.4;
-    vec3 base = color;
-    vec3 bright = base * 2.0;
-    vec3 dark = base * 0.3;
-    vec3 final = mix(dark, bright, pat);
-    final = final * (ambient + diff * 0.7) + spec * bright;
-    gl_FragColor = vec4(final, 1.0);
-  }
-</script>
-
-<!-- ШЕЙДЕР МОЛЕКУЛЫ -->
-<script id="noise" type="x-shader/x-vertex">
-  vec3 mod289(vec3 x){return x-floor(x*(1./289.))*289.;}
-  vec4 mod289(vec4 x){return x-floor(x*(1./289.))*289.;}
-  vec4 permute(vec4 x){return mod289(((x*34.)+10.)*x);}
-  vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-.85373472095314*r;}
-  float snoise(vec3 v){
-    const vec2 C=vec2(1./6.,1./3.); const vec4 D=vec4(0.,.5,1.,2.);
-    vec3 i=floor(v+dot(v,C.yyy)); vec3 x0=v-i+dot(i,C.xxx);
-    vec3 g=step(x0.yzx,x0.xyz); vec3 l=1.-g; vec3 i1=min(g.xyz,l.zxy); vec3 i2=max(g.xyz,l.zxy);
-    vec3 x1=x0-i1+C.xxx; vec3 x2=x0-i2+C.yyy; vec3 x3=x0-D.yyy;
-    i=mod289(i);
-    vec4 p=permute(permute(permute(i.z+vec4(0.,i1.z,i2.z,1.))+
-                          i.y+vec4(0.,i1.y,i2.y,1.))+
-                          i.x+vec4(0.,i1.x,i2.x,1.));
-    float n_=1./7.; vec3 ns=n_*D.wyz-D.xzx;
-    vec4 j=p-49.*floor(p*ns.z*ns.z);
-    vec4 x_=floor(j*ns.z); vec4 y_=floor(j-7.*x_);
-    vec4 x=x_*ns.x+ns.yyyy; vec4 y=y_*ns.x+ns.yyyy; vec4 h=1.-abs(x)-abs(y);
-    vec4 b0=vec4(x.xy,y.xy); vec4 b1=vec4(x.zw,y.zw);
-    vec4 s0=floor(b0)*2.+1.; vec4 s1=floor(b1)*2.+1.; vec4 sh=-step(h,vec4(0.));
-    vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy; vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
-    vec3 p0=vec3(a0.xy,h.x); vec3 p1=vec3(a0.zw,h.y); vec3 p2=vec3(a1.xy,h.z); vec3 p3=vec3(a1.zw,h.w);
-    vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
-    p0*=norm.x; p1*=norm.y; p2*=norm.z; p3*=norm.w;
-    vec4 m=max(.5-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.);
-    m=m*m; return 105.*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
-  }
-  float pattern1(vec3 p){float a=atan(p.z,p.x), r=length(p.xz);return sin(r*12.-time*2.)*.5+.5 * sin(a*8.)*.5+.5;}
-  float pattern2(vec3 p){vec3 q=abs(p); float d=max(q.x,max(q.y,q.z));return smoothstep(0.,.3,sin(d*20.-time*3.));}
-  float pattern3(vec3 p){float a=atan(p.y,p.x);return sin(a*6.)*sin(length(p.xz)*8.-time)*.5+.5;}
-  float pattern4(vec3 p){vec3 pp=p*3.; float tile=fract(pp.x+pp.z);float wave=sin(pp.y*10.+time*2.);return smoothstep(.4,.6,tile+wave*.2);}
-  float pattern5(vec3 p){float a=atan(p.z,p.x);float r=length(p.xz);return sin(a*12. + sin(r*8. - time*2.))*0.5+0.5;}
-  float pattern6(vec3 p){float a=atan(p.z,p.x);return pow(sin(a*5.)*sin(length(p.xz)*10. - time), 2.)*0.5+0.5;}
-  float pattern7(vec3 p){return sin(p.x*15. + time)*sin(p.z*15. + time)*0.5+0.5;}
-  float pattern8(vec3 p){vec3 pp = p * 4.0;float grid = fract(pp.x + pp.z);float diamond = abs(fract(pp.x*0.7 + pp.y*0.7) - 0.5) + abs(fract(pp.z*0.7 - pp.y*0.7) - 0.5);float star = sin(pp.x*20. + time)*sin(pp.z*20. + time)*sin(pp.y*10. + time);float pattern = smoothstep(0.4, 0.6, grid) * (1.0 - smoothstep(0.0, 0.4, diamond));return pattern * (star * 0.3 + 0.7);}
-  float getPattern(vec3 p){int idx = int(patternIndex);if(idx==0)return pattern1(p);if(idx==1)return pattern2(p);if(idx==2)return pattern3(p);if(idx==3)return pattern4(p);if(idx==4)return pattern5(p);if(idx==5)return pattern6(p);if(idx==6)return pattern7(p);return pattern8(p);}
-</script>
-
-<script>
-function randomSeed() { return Math.random() * 1000; }
-function randomPatternType() { return Math.floor(Math.random() * 24); }
-
-class World{
-  constructor(){
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, .1, 1000);
-    this.camera.position.z = 3;
-    this.renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
-    this.renderer.setPixelRatio(devicePixelRatio);
-    this.renderer.setSize(innerWidth, innerHeight);
-    document.body.appendChild(this.renderer.domElement);
-
-    this.mode = 'molecule';
-    this.molecule = new Molecule(this);
-    this.carpet = new Carpet(this);
-    this.scene.add(this.molecule);
-    this.scene.add(this.carpet);
-    this.carpet.visible = false;
-
-    // === ФИКС: Состояние вращения ===
-    this.targetRotation = { x: 0, y: 0 };
-    this.currentRotation = { x: 0, y: 0 };
-    this.isDragging = false;
-    this.autoRotate = true;
-
-    this.setupControls();
-    this.setupMouseControl();
-    this.setupColorPicker();
-    window.addEventListener('resize', () => this.resize());
-    this.animate();
-  }
-
-  setupControls(){
-    const moleculeBtn = document.getElementById('moleculeBtn');
-    const carpetBtn = document.getElementById('carpetBtn');
-    const patternBtn = document.getElementById('patternBtn');
-    const patternList = document.getElementById('patternList');
-
-    moleculeBtn.onclick = () => {
-      this.mode = 'molecule';
-      this.molecule.visible = true;
-      this.carpet.visible = false;
-      moleculeBtn.classList.add('active');
-      carpetBtn.classList.remove('active');
-      patternBtn.textContent = 'Новый узор';
-      patternList.classList.remove('active');
-    };
-
-    carpetBtn.onclick = () => {
-      this.mode = 'carpet';
-      this.molecule.visible = false;
-      this.carpet.visible = true;
-      carpetBtn.classList.add('active');
-      moleculeBtn.classList.remove('active');
-      patternBtn.textContent = 'Выбрать узор';
-      patternList.classList.add('active');
-      // === ФИКС: Полная генерация при переключении ===
-      this.carpet.generatePattern();
-    };
-
-    patternBtn.onclick = () => {
-      if(this.mode === 'molecule') {
-        this.molecule.nextPattern();
-      } else {
-        patternList.classList.toggle('active');
-      }
-    };
-
-    // === ФИКС: При выборе узора — полный реген с новым seed ===
-    document.querySelectorAll('.pattern-btn').forEach(btn => {
-      btn.onclick = () => {
-        document.querySelectorAll('.pattern-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const type = parseFloat(btn.dataset.type);
-        this.carpet.setPatternTypeAndRegenerate(type);
-      };
-    });
-  }
-
-  setupMouseControl(){
-    const dom = this.renderer.domElement;
-    dom.addEventListener('mousedown', e => {
-      if (document.body.classList.contains('picking')) return;
-      this.isDragging = true;
-      this.previousMouse = { x: e.clientX, y: e.clientY };
-      this.autoRotate = false;
-    });
-
-    dom.addEventListener('mousemove', e => {
-      if (!this.isDragging) return;
-      const deltaX = e.clientX - this.previousMouse.x;
-      const deltaY = e.clientY - this.previousMouse.y;
-      this.previousMouse = { x: e.clientX, y: e.clientY };
-
-      const rotSpeed = 0.006;
-      this.targetRotation.y += deltaX * rotSpeed;
-      this.targetRotation.x += deltaY * rotSpeed;
-    });
-
-    const endDrag = () => {
-      this.isDragging = false;
-      this.autoRotate = true;
-    };
-    dom.addEventListener('mouseup', endDrag);
-    dom.addEventListener('mouseleave', endDrag);
-  }
-
-  setupColorPicker(){
-    const picker = document.getElementById('colorPicker');
-    const toggleBtn = document.createElement('button');
-    toggleBtn.innerHTML = 'Цвет';
-    toggleBtn.style.cssText = 'position:fixed;top:20px;right:20px;z-index:101;background:red;border:none;border-radius:50%;width:56px;height:56px;cursor:pointer;font-weight:bold;box-shadow:0 4px 15px rgba(0,0,0,0.4);';
-    document.body.appendChild(toggleBtn);
-
-    toggleBtn.onclick = () => {
-      picker.classList.toggle('active');
-      document.body.classList.toggle('picking');
-    };
-
-    const canvas = document.createElement('canvas');
-    canvas.width = 280; canvas.height = 280;
-    const ctx = canvas.getContext('2d');
-    const hueGrad = ctx.createLinearGradient(0,0,280,0);
-    ['#ff0000','#ffff00','#00ff00','#00ffff','#0000ff','#ff00ff','#ff0000'].forEach((c,i)=>hueGrad.addColorStop(i/6,c));
-    ctx.fillStyle = hueGrad; ctx.fillRect(0,0,280,280);
-
-    // Append canvas to picker
-    picker.appendChild(canvas);
-
-    // Click listener on canvas
-    canvas.addEventListener('click', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const img = ctx.getImageData(x, y, 1, 1).data;
-      const r = img[0], g = img[1], b = img[2];
-      const color = (r << 16) | (g << 8) | b;
-      if(this.mode === 'molecule') this.molecule.setColor(color);
-      else this.carpet.setColor(color);
-    });
-  }
-
-  resize(){
-    const w = innerWidth, h = innerHeight;
-    this.camera.aspect = w/h; this.camera.updateProjectionMatrix();
-    this.renderer.setSize(w, h);
-  }
-
-  animate = () => {
-    requestAnimationFrame(this.animate);
-    const t = performance.now() * 0.001;
-
-    // === ФИКС: Плавное вращение ===
-    if (this.autoRotate) {
-      this.targetRotation.y = t * 0.2;
+    generateTextureCanvas(animate = false, animationTime = 0) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = this.size;
+        canvas.height = this.size;
+        ctx.fillStyle = `rgba(${backgroundColor[0]}, ${backgroundColor[1]}, ${backgroundColor[2]}, ${backgroundColor[3]})`;
+        ctx.fillRect(0, 0, this.size, this.size);
+        ctx.globalAlpha = animate ? 0.9 : 1.0;
+        const main = this._makeKaleidoSquare(animate, animationTime);
+        ctx.drawImage(main, 0, 0);
+        ctx.globalAlpha = 1.0;
+        return canvas;
     }
-
-    // Плавная интерполяция углов
-    this.currentRotation.x += (this.targetRotation.x - this.currentRotation.x) * 0.1;
-    this.currentRotation.y += (this.targetRotation.y - this.currentRotation.y) * 0.1;
-
-    this.molecule.rotation.x = this.currentRotation.x;
-    this.molecule.rotation.y = this.currentRotation.y;
-    this.carpet.rotation.x = this.currentRotation.x;
-    this.carpet.rotation.y = this.currentRotation.y;
-
-    this.molecule.animate(t);
-    this.carpet.animate(t);
-    this.renderer.render(this.scene, this.camera);
-  };
+    _interpolateColor(color1, color2, factor) {
+        return [
+            Math.round(color1[0] * (1 - factor) + color2[0] * factor),
+            Math.round(color1[1] * (1 - factor) + color2[1] * factor),
+            Math.round(color1[2] * (1 - factor) + color2[2] * factor),
+            color1[3] * (1 - factor) + color2[3] * factor
+        ];
+    }
+    _makeTrianglifyPattern(width, height, t) {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        const cell_size = 50;
+        for (let i = 0; i < width; i += cell_size) {
+            for (let j = 0; j < height; j += cell_size) {
+                const points = [
+                    [i, j],
+                    [i + cell_size, j],
+                    [i + cell_size, j + cell_size],
+                    [i, j + cell_size],
+                ];
+                const color1 = this.palette[Math.floor(Math.random() * this.palette.length)];
+                const color2 = this.palette[Math.floor(Math.random() * this.palette.length)];
+                const factor = t ? (Math.sin(t + i * 0.1 + j * 0.1) + 1) / 2 : 0;
+                ctx.fillStyle = `rgba(${this._interpolateColor(color1, color2, factor).join(',')})`;
+                ctx.beginPath();
+                ctx.moveTo(points[0][0], points[0][1]);
+                ctx.lineTo(points[1][0], points[1][1]);
+                ctx.lineTo(points[2][0], points[2][1]);
+                ctx.fill();
+                ctx.fillStyle = `rgba(${this._interpolateColor(color2, color1, factor).join(',')})`;
+                ctx.beginPath();
+                ctx.moveTo(points[0][0], points[0][1]);
+                ctx.lineTo(points[2][0], points[2][1]);
+                ctx.lineTo(points[3][0], points[3][1]);
+                ctx.fill();
+            }
+        }
+        return canvas;
+    }
+    _makeKaleidoSquare(animate, animationTime) {
+        const canvas = document.createElement('canvas');
+        canvas.width = this.size;
+        canvas.height = this.size;
+        const ctx = canvas.getContext('2d');
+        const radius = this.size / 2;
+        const angle = 360 / this.sectors;
+        const cx = radius, cy = radius;
+        const t = animate ? animationTime * ANIMATION_SPEED : 0;
+        const rotationOffset = Math.sin(t) * 0.4;
+        if (this.mode === 'Lines') {
+            for (let i = 0; i < this.elementsData.length; i++) {
+                const data = this.elementsData[i];
+                const color = this.palette[data.colorIdx];
+                const nextColor = this.palette[(data.colorIdx + 1) % this.palette.length];
+                const colorFactor = (Math.sin(t + i * 0.3) + 1) / 2;
+                ctx.strokeStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
+                const thetaOffset = Math.sin(t + i * 0.3) * 0.4;
+                const x1 = cx + data.r1 * radius * Math.cos(data.theta1 + thetaOffset);
+                const y1 = cy + data.r1 * radius * Math.sin(data.theta1 + thetaOffset);
+                const x2 = cx + data.r2 * radius * Math.cos(data.theta2 + thetaOffset);
+                const y2 = cy + data.r2 * radius * Math.sin(data.theta2 + thetaOffset);
+                ctx.lineWidth = data.lineWidth * (1 + Math.sin(t + i * 0.3) * 0.8);
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+        } else if (this.mode === 'Dots') {
+            for (let i = 0; i < this.elementsData.length; i++) {
+                const data = this.elementsData[i];
+                const color = this.palette[data.colorIdx];
+                const nextColor = this.palette[(data.colorIdx + 1) % this.palette.length];
+                const colorFactor = (Math.sin(t + i * 0.3) + 1) / 2;
+                ctx.fillStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
+                const thetaOffset = Math.sin(t + i * 0.3) * 0.4;
+                const x = cx + data.r * radius * Math.cos(data.theta + thetaOffset);
+                const y = cy + data.r * radius * Math.sin(data.theta + thetaOffset);
+                const size_dot = data.size_dot * (1 + Math.sin(t + i * 0.3) * 0.8);
+                ctx.beginPath();
+                ctx.arc(x, y, size_dot, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+        } else if (this.mode === 'Shapes') {
+            for (let i = 0; i < this.elementsData.length; i++) {
+                const data = this.elementsData[i];
+                const color = this.palette[data.colorIdx];
+                const nextColor = this.palette[(data.colorIdx + 1) % this.palette.length];
+                const colorFactor = (Math.sin(t + i * 0.3) + 1) / 2;
+                ctx.fillStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
+                const thetaOffset = Math.sin(t + i * 0.3) * 0.4;
+                const x = cx + data.r * radius * Math.cos(data.theta + thetaOffset);
+                const y = cy + data.r * radius * Math.sin(data.theta + thetaOffset);
+                const size_sq = data.size_sq * (1 + Math.sin(t + i * 0.3) * 0.8);
+                ctx.fillRect(x - size_sq, y - size_sq, size_sq * 2, size_sq * 2);
+            }
+        } else if (this.mode === 'Mixed') {
+            for (let i = 0; i < this.elementsData.length; i++) {
+                const data = this.elementsData[i];
+                const color = this.palette[data.colorIdx];
+                const nextColor = this.palette[(data.colorIdx + 1) % this.palette.length];
+                const colorFactor = (Math.sin(t + i * 0.3) + 1) / 2;
+                ctx.fillStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
+                ctx.strokeStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
+                const thetaOffset = Math.sin(t + i * 0.3) * 0.4;
+                if (data.type === 'Lines') {
+                    const x1 = cx + data.r1 * radius * Math.cos(data.theta1 + thetaOffset);
+                    const y1 = cy + data.r1 * radius * Math.sin(data.theta1 + thetaOffset);
+                    const x2 = cx + data.r2 * radius * Math.cos(data.theta2 + thetaOffset);
+                    const y2 = cy + data.r2 * radius * Math.sin(data.theta2 + thetaOffset);
+                    ctx.lineWidth = data.lineWidth * (1 + Math.sin(t + i * 0.3) * 0.8);
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                } else if (data.type === 'Dots') {
+                    const x = cx + data.r * radius * Math.cos(data.theta + thetaOffset);
+                    const y = cy + data.r * radius * Math.sin(data.theta + thetaOffset);
+                    const size_dot = data.size_dot * (1 + Math.sin(t + i * 0.3) * 0.8);
+                    ctx.beginPath();
+                    ctx.arc(x, y, size_dot, 0, 2 * Math.PI);
+                    ctx.fill();
+                } else {
+                    const x = cx + data.r * radius * Math.cos(data.theta + thetaOffset);
+                    const y = cy + data.r * radius * Math.sin(data.theta + thetaOffset);
+                    const size_sq = data.size_sq * (1 + Math.sin(t + i * 0.3) * 0.8);
+                    ctx.fillRect(x - size_sq, y - size_sq, size_sq * 2, size_sq * 2);
+                }
+            }
+        } else if (this.mode === 'Spiral') {
+            const s = this.branch_settings;
+            for (let i = 0; i < this.elementsData.length; i++) {
+                let theta_start = this.elementsData[i].theta_start + t * 0.3;
+                let color_idx = this.elementsData[i].color_idx;
+                const next_color_idx = (color_idx + 1) % this.palette.length;
+                for (let r = 0; r < radius; r += 2) {
+                    const theta = theta_start + r * s.spiral_density;
+                    const x = cx + r * Math.cos(theta);
+                    const y = cy + r * Math.sin(theta);
+                    const colorFactor = (Math.sin(t + r * 0.02) + 1) / 2;
+                    const r_col = Math.round(this.palette[color_idx][0] * (1 - colorFactor) + this.palette[next_color_idx][0] * colorFactor);
+                    const g_col = Math.round(this.palette[color_idx][1] * (1 - colorFactor) + this.palette[next_color_idx][1] * colorFactor);
+                    const b_col = Math.round(this.palette[color_idx][2] * (1 - colorFactor) + this.palette[next_color_idx][2] * colorFactor);
+                    const a_col = this.palette[color_idx][3] * (1 - colorFactor) + this.palette[next_color_idx][3] * colorFactor;
+                    const width = Math.max(2, 4 + Math.sin(r * 0.03 + t) * 5);
+                    ctx.fillStyle = `rgba(${r_col}, ${g_col}, ${b_col}, ${a_col})`;
+                    ctx.beginPath();
+                    ctx.arc(x, y, width, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+        } else if (this.mode === 'Orbit') {
+            const diameter = this.size;
+            for (const config of this.elementsData) {
+                const width = config.width;
+                const height = width;
+                let x = config.left !== undefined ? config.left : diameter - config.right - width;
+                let y = config.top !== undefined ? config.top : diameter - config.bottom - height;
+                x = cx + (x - diameter/2) * (1 + Math.sin(t) * 0.3);
+                y = cy + (y - diameter/2) * (1 + Math.cos(t) * 0.3);
+                const opacity = config.blink === 'blink' ? 0.5 + 0.5 * Math.sin(t / config.speed) :
+                                config.blink === 'blink-lighter' ? 0.3 + 0.2 * Math.sin(t / config.speed) :
+                                0.375 + 0.375 * Math.sin(t / config.speed);
+                const pattern = this._makeTrianglifyPattern(width, height, t);
+                ctx.globalAlpha = opacity;
+                ctx.drawImage(pattern, x, y, width, height);
+                ctx.globalAlpha = 1;
+                ctx.strokeStyle = `rgba(0, 0, 255, ${0.5 + Math.sin(t) * 0.5})`;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(x + width / 2, y + height / 2, width / 2, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+        } else if (this.mode === 'DotToShape') {
+            for (let i = 0; i < this.elementsData.length; i++) {
+                const data = this.elementsData[i];
+                const color = this.palette[data.colorIdx];
+                const nextColor = this.palette[(data.colorIdx + 1) % this.palette.length];
+                const colorFactor = (Math.sin(t + i * 0.3) + 1) / 2;
+                ctx.fillStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
+                const thetaOffset = Math.sin(t + i * 0.3) * 0.4;
+                const x = cx + data.r * radius * Math.cos(data.theta + thetaOffset);
+                const y = cy + data.r * radius * Math.sin(data.theta + thetaOffset);
+                const size_dot = data.size_dot * (1 + Math.sin(t + i * 0.3) * 0.8);
+                const size_sq = data.size_sq * (1 + Math.sin(t + i * 0.3) * 0.8);
+                const shapeFactor = (Math.sin(t * 2) + 1) / 2;
+                const size = size_dot * (1 - shapeFactor) + size_sq * shapeFactor;
+                const cornerRadius = size * (1 - shapeFactor);
+                ctx.beginPath();
+                ctx.moveTo(x - size + cornerRadius, y - size);
+                ctx.lineTo(x + size - cornerRadius, y - size);
+                ctx.arcTo(x + size, y - size, x + size, y - size + cornerRadius, cornerRadius);
+                ctx.lineTo(x + size, y + size - cornerRadius);
+                ctx.arcTo(x + size, y + size, x + size - cornerRadius, y + size, cornerRadius);
+                ctx.lineTo(x - size + cornerRadius, y + size);
+                ctx.arcTo(x - size, y + size, x - size, y + size - cornerRadius, cornerRadius);
+                ctx.lineTo(x - size, y - size + cornerRadius);
+                ctx.arcTo(x - size, y - size, x - size + cornerRadius, y - size, cornerRadius);
+                ctx.closePath();
+                ctx.fill();
+            }
+        } else if (this.mode === 'DotsToMixed') {
+            for (let i = 0; i < this.elementsData.length; i++) {
+                const data = this.elementsData[i];
+                const color = this.palette[data.colorIdx];
+                const nextColor = this.palette[(data.colorIdx + 1) % this.palette.length];
+                const colorFactor = (Math.sin(t + i * 0.3) + 1) / 2;
+                ctx.fillStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
+                ctx.strokeStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
+                const thetaOffset = Math.sin(t + i * 0.3) * 0.4;
+                const x = cx + data.r * radius * Math.cos(data.theta + thetaOffset);
+                const y = cy + data.r * radius * Math.sin(data.theta + thetaOffset);
+                const shapeFactor = (Math.sin(t * 2) + 1) / 2;
+                if (shapeFactor < 0.5) {
+                    const size_dot = data.size_dot * (1 + Math.sin(t + i * 0.3) * 0.8);
+                    ctx.beginPath();
+                    ctx.arc(x, y, size_dot * (1 - shapeFactor * 2), 0, 2 * Math.PI);
+                    ctx.fill();
+                } else {
+                    if (data.type === 'Lines') {
+                        const x1 = cx + data.r1 * radius * Math.cos(data.theta1 + thetaOffset);
+                        const y1 = cy + data.r1 * radius * Math.sin(data.theta1 + thetaOffset);
+                        const x2 = cx + data.r2 * radius * Math.cos(data.theta2 + thetaOffset);
+                        const y2 = cy + data.r2 * radius * Math.sin(data.theta2 + thetaOffset);
+                        ctx.lineWidth = data.lineWidth * (1 + Math.sin(t + i * 0.3) * 0.8) * (shapeFactor * 2 - 1);
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.stroke();
+                    } else if (data.type === 'Dots') {
+                        const size_dot = data.size_dot * (1 + Math.sin(t + i * 0.3) * 0.8) * (shapeFactor * 2 - 1);
+                        ctx.beginPath();
+                        ctx.arc(x, y, size_dot, 0, 2 * Math.PI);
+                        ctx.fill();
+                    } else {
+                        const size_sq = data.size_sq * (1 + Math.sin(t + i * 0.3) * 0.8) * (shapeFactor * 2 - 1);
+                        ctx.fillRect(x - size_sq, y - size_sq, size_sq * 2, size_sq * 2);
+                    }
+                }
+            }
+        }
+        const full = document.createElement('canvas');
+        full.width = this.size;
+        full.height = this.size;
+        const fullCtx = full.getContext('2d');
+        fullCtx.fillStyle = `rgba(${backgroundColor[0]}, ${backgroundColor[1]}, ${backgroundColor[2]}, ${backgroundColor[3]})`;
+        fullCtx.fillRect(0, 0, this.size, this.size);
+        for (let i = 0; i < this.sectors; i++) {
+            fullCtx.save();
+            fullCtx.translate(cx, cy);
+            fullCtx.rotate((angle * i + rotationOffset) * Math.PI / 180);
+            if (i % 2 === 1) {
+                fullCtx.scale(-1, 1);
+            }
+            fullCtx.drawImage(canvas, -cx, -cy);
+            fullCtx.restore();
+        }
+        return full;
+    }
+    _drawShape(x, y, angle, size, ctx, points, t) {
+        this._drawBranch(x, y, angle, size, 1, ctx, points, t);
+        this._drawBranch(x, y, angle, size, -1, ctx, points, t);
+    }
+    _drawBranch(x, y, angle, size, direction, ctx, points, t) {
+        const s = this.branch_settings;
+        const new_angle = angle + (s.angle * direction + s.offset) + Math.sin(t) * 0.3;
+        const new_size = size * s.scale * (1 + Math.sin(t) * 0.2);
+        const x2 = x + Math.cos(new_angle) * new_size;
+        const y2 = y + Math.sin(new_angle) * new_size;
+        const color = this.palette[Math.floor(Math.random() * this.palette.length)];
+        const nextColor = this.palette[(Math.floor(Math.random() * this.palette.length) + 1) % this.palette.length];
+        const colorFactor = (Math.sin(t) + 1) / 2;
+        ctx.strokeStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
+        ctx.lineWidth = 2 * (1 + Math.sin(t) * 0.8);
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        points.push({ x: x2, y: y2, angle: new_angle, size: new_size });
+    }
 }
-
-// === ФИКС: Класс Carpet с регенерацией при смене узора ===
-class Carpet extends THREE.Mesh{
-  constructor(world){
-    super();
-    this.world = world;
-    this.geometry = new THREE.SphereGeometry(1.5, 512, 256);
-    this.material = new THREE.ShaderMaterial({
-      uniforms: {
-        time: { value: 0 },
-        color: { value: new THREE.Color(0x101a88) },
-        seed: { value: 0 },
-        patternType: { value: 0 }
-      },
-      vertexShader: document.getElementById('kaleido-vs').textContent,
-      fragmentShader: document.getElementById('kaleido-fs').textContent
+let palette = loadPalette();
+let currentTextureCanvas = null;
+let isAnimating = false;
+let isFullAnimating = false;
+let isRecording = false;
+let animationFrameId = null;
+let fullAnimationFrameId = null;
+let startTime = null;
+let fullStartTime = null;
+let generator = null;
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordTimerId = null;
+let recordStartTime = null;
+let previewScene, previewCamera, previewRenderer, previewSphere, previewControls;
+let fullScene, fullCamera, fullRenderer, fullSphere, fullControls;
+let previewContainer = document.getElementById('previewContainer');
+let fullContainer = document.getElementById('fullContainer');
+function init3D(container, size, isPreview = true) {
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xffffff); // Белый фон
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(size, size);
+    container.appendChild(renderer.domElement);
+    const geometry = new THREE.SphereGeometry(5, 128, 128); // Увеличены сегменты для меньшей искажения
+    const material = new THREE.MeshBasicMaterial({ side: THREE.FrontSide, transparent: false });
+    const sphere = new THREE.Mesh(geometry, material);
+    scene.add(sphere);
+    camera.position.set(0, 0, 10);
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enablePan = false;
+    controls.enableZoom = false;
+    controls.enableRotate = true;
+    controls.autoRotate = false;
+    function animate3D() {
+        requestAnimationFrame(animate3D);
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    animate3D();
+    return { scene, camera, renderer, sphere, controls };
+}
+function update3DTexture(sphere, textureCanvas) {
+    const texture = new THREE.CanvasTexture(textureCanvas);
+    texture.needsUpdate = true;
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping; // Повтор текстуры, если нужно
+    sphere.material.map = texture;
+    sphere.material.needsUpdate = true;
+}
+function loadPalette() {
+    const generatedColors = localStorage.getItem('generatedColors');
+    if (generatedColors) {
+        try {
+            const colors = JSON.parse(generatedColors);
+            if (Array.isArray(colors) && colors.every(c => /^#[0-9A-Fa-f]{6}$/.test(c))) {
+                const newPalette = {};
+                colors.forEach((color, index) => {
+                    const rgb = hexToRgb(color);
+                    newPalette[(index + 1).toString()] = [...rgb, 1];
+                });
+                localStorage.setItem('palette', JSON.stringify(newPalette));
+                return newPalette;
+            }
+        } catch (e) {
+            console.error('Error parsing generatedColors:', e);
+        }
+    }
+    const saved = localStorage.getItem('palette');
+    if (saved) {
+        try {
+            const json = JSON.parse(saved);
+            if (Object.keys(json).every(k => Array.isArray(json[k]) && json[k].length === 4 && json[k].slice(0, 3).every(c => Number.isInteger(c) && c >= 0 && c <= 255) && json[k][3] >= 0 && json[k][3] <= 1)) {
+                return json;
+            }
+        } catch (e) {
+            console.error('Error parsing saved palette:', e);
+        }
+    }
+    return DEFAULT_PALETTE;
+}
+function loadBackgroundColor() {
+    const saved = localStorage.getItem('backgroundColor');
+    if (saved) {
+        try {
+            const color = JSON.parse(saved);
+            if (Array.isArray(color) && color.length === 4 && color.slice(0, 3).every(c => Number.isInteger(c) && c >= 0 && c <= 255) && color[3] >= 0 && color[3] <= 1) {
+                backgroundColor = color;
+            }
+        } catch (e) {
+            console.error('Error parsing saved background color:', e);
+        }
+    }
+}
+function savePalette() {
+    localStorage.setItem('palette', JSON.stringify(palette));
+}
+function updatePaletteTable() {
+    const tbody = document.querySelector('#paletteTable tbody');
+    tbody.innerHTML = '';
+    Object.entries(palette).forEach(([key, color], index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="border-b p-3 text-center text-gray-700">${key}</td>
+            <td class="border-b p-3">
+                <button class="color-btn" style="background-color: rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]});" title="Изменить цвет"></button>
+            </td>
+            <td class="border-b p-3">
+                <button class="delete-btn" title="Удалить цвет">Удалить</button>
+            </td>
+        `;
+        row.querySelector('.color-btn').addEventListener('click', () => changeColor(index));
+        row.querySelector('.delete-btn').addEventListener('click', () => removeSpecificColor(key));
+        tbody.appendChild(row);
     });
-  }
-
-  generatePattern(){
-    this.material.uniforms.seed.value = randomSeed();
-    this.material.uniforms.patternType.value = randomPatternType();
-  }
-
-  // === НОВЫЙ МЕТОД: смена узора + новый seed ===
-  setPatternTypeAndRegenerate(type) {
-    this.material.uniforms.seed.value = randomSeed();
-    this.material.uniforms.patternType.value = type;
-  }
-
-  setColor(hex){
-    this.material.uniforms.color.value.setHex(hex);
-  }
-
-  animate(t){
-    this.material.uniforms.time.value = t;
-  }
 }
-
-// Molecule без изменений
-class Molecule extends THREE.Object3D{
-  constructor(world){ super(); this.world = world; this.radius=1.5; this.detail=40; this.pMin=0.01; this.pMax=0.08; this.patternIdx=0; this.currentColor = 0x101a88;
-    const geom=new THREE.IcosahedronBufferGeometry(1,this.detail);
-    const mat=new THREE.PointsMaterial({map:this.dotTex(),blending:THREE.AdditiveBlending,color:this.currentColor,depthTest:false,transparent:true,sizeAttenuation:true});
-    this.setupShader(mat); this.mesh=new THREE.Points(geom,mat); this.add(this.mesh);
-  }
-  dotTex(size=64){ const c=document.createElement('canvas'); c.width=c.height=size; const ctx=c.getContext('2d'); const g=ctx.createRadialGradient(size/2,size/2,0,size/2,size/2,size/2); g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(.3,'rgba(200,220,255,.9)'); g.addColorStop(1,'rgba(100,140,220,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,size,size); return new THREE.CanvasTexture(c); }
-  setupShader(mat){ mat.onBeforeCompile=shader=>{ shader.uniforms.time={value:0}; shader.uniforms.radius={value:this.radius}; shader.uniforms.pMin={value:this.pMin}; shader.uniforms.pMax={value:this.pMax}; shader.uniforms.patternIndex={value:this.patternIdx}; shader.vertexShader=document.getElementById('noise').textContent+'\n'+shader.vertexShader; shader.vertexShader=`uniform float time;uniform float radius;uniform float pMin;uniform float pMax;uniform float patternIndex;`+shader.vertexShader; shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',`vec3 p=position;float n=snoise(vec3(p.x*.6+time*.2,p.y*.4+time*.3,p.z*.2+time*.2));p+=n*.3;float pat=getPattern(p);float intensity=pat*.6+n*.4;float l=radius/length(p);p*=l;float s=mix(pMin,pMax,intensity);vec3 transformed=p;`); shader.vertexShader=shader.vertexShader.replace('gl_PointSize = size;','gl_PointSize = s;'); mat.userData.shader=shader; }; }
-  nextPattern(){ this.patternIdx=(this.patternIdx+1)%8; if(this.mesh.material.userData.shader) this.mesh.material.userData.shader.uniforms.patternIndex.value=this.patternIdx; }
-  setColor(hex){ this.currentColor = hex; this.mesh.material.color.setHex(hex); }
-  animate(t){ if(this.mesh.material.userData.shader) this.mesh.material.userData.shader.uniforms.time.value=t; }
+function addColor() {
+    if (Object.keys(palette).length >= 20) {
+        alert('Максимум 20 цветов!');
+        return;
+    }
+    const newKey = (Object.keys(palette).length + 1).toString();
+    palette[newKey] = AVAILABLE_COLORS[colorIndex % AVAILABLE_COLORS.length];
+    colorIndex++;
+    updatePaletteTable();
+    savePalette();
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-  new World();
+function removeColor() {
+    if (Object.keys(palette).length <= 1) {
+        alert('Минимум 1 цвет!');
+        return;
+    }
+    const keys = Object.keys(palette);
+    delete palette[keys[keys.length - 1]];
+    updatePaletteTable();
+    savePalette();
+}
+function removeSpecificColor(key) {
+    if (Object.keys(palette).length <= 1) {
+        alert('Минимум 1 цвет!');
+        return;
+    }
+    delete palette[key];
+    const newPalette = {};
+    Object.values(palette).forEach((color, index) => {
+        newPalette[(index + 1).toString()] = color;
+    });
+    palette = newPalette;
+    updatePaletteTable();
+    savePalette();
+}
+function changeColor(row) {
+    const key = Object.keys(palette)[row];
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+        <div class="bg-white p-6 rounded-lg max-w-sm w-full">
+            <h3 class="text-lg font-semibold mb-4">Выбор цвета для ключа ${key}</h3>
+            <input type="color" id="colorPicker" value="${rgbToHex(palette[key])}" class="w-full h-12 mb-4">
+            <label class="block text-sm font-medium mb-1">Прозрачность: <span id="opacityValue">${palette[key][3]}</span></label>
+            <input type="range" id="opacitySlider" min="0" max="1" step="0.01" value="${palette[key][3]}" class="w-full mb-4">
+            <div class="flex justify-end gap-3">
+                <button id="cancelBtn" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Отмена</button>
+                <button id="saveColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Сохранить</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById('opacitySlider').addEventListener('input', (e) => {
+        document.getElementById('opacityValue').textContent = e.target.value;
+    });
+    document.getElementById('saveColorBtn').addEventListener('click', () => {
+        const color = hexToRgb(document.getElementById('colorPicker').value);
+        const opacity = parseFloat(document.getElementById('opacitySlider').value);
+        palette[key] = [...color, opacity];
+        updatePaletteTable();
+        savePalette();
+        document.body.removeChild(modal);
+    });
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+        document.body.removeChild(modal);
+    });
+}
+function changeBackgroundColor() {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+        <div class="bg-white p-6 rounded-lg max-w-sm w-full">
+            <h3 class="text-lg font-semibold mb-4">Выбор цвета фона</h3>
+            <input type="color" id="backgroundColorPicker" value="${rgbToHex(backgroundColor)}" class="w-full h-12 mb-4">
+            <label class="block text-sm font-medium mb-1">Прозрачность: <span id="backgroundOpacityValue">${backgroundColor[3]}</span></label>
+            <input type="range" id="backgroundOpacitySlider" min="0" max="1" step="0.01" value="${backgroundColor[3]}" class="w-full mb-4">
+            <div class="flex justify-end gap-3">
+                <button id="cancelBackgroundBtn" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Отмена</button>
+                <button id="saveBackgroundColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Сохранить</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById('backgroundOpacitySlider').addEventListener('input', (e) => {
+        document.getElementById('backgroundOpacityValue').textContent = e.target.value;
+    });
+    document.getElementById('saveBackgroundColorBtn').addEventListener('click', () => {
+        const color = hexToRgb(document.getElementById('backgroundColorPicker').value);
+        const opacity = parseFloat(document.getElementById('backgroundOpacitySlider').value);
+        backgroundColor = [...color, opacity];
+        localStorage.setItem('backgroundColor', JSON.stringify(backgroundColor));
+        document.body.removeChild(modal);
+        generate();
+    });
+    document.getElementById('cancelBackgroundBtn').addEventListener('click', () => {
+        document.body.removeChild(modal);
+    });
+}
+function rgbToHex([r, g, b]) {
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
+}
+function hexToRgb(hex) {
+    const bigint = parseInt(hex.slice(1), 16);
+    return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
+}
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const secs = (seconds % 60).toString().padStart(2, '0');
+    return `${mins}:${secs}`;
+}
+function updateRecordTimer() {
+    if (isRecording) {
+        const elapsed = Math.floor((Date.now() - recordStartTime) / 1000);
+        document.getElementById('recordTimer').textContent = `Запись: ${formatTime(elapsed)}`;
+        if (elapsed >= MAX_RECORDING_DURATION) {
+            stopRecording();
+            alert(`Максимальная длительность записи (${MAX_RECORDING_DURATION} секунд) достигнута.`);
+        }
+    }
+}
+function resetRecordTimer() {
+    document.getElementById('recordTimer').textContent = 'Запись: 00:00';
+    if (recordTimerId) {
+        clearInterval(recordTimerId);
+        recordTimerId = null;
+    }
+}
+function generate() {
+    stopAnimation();
+    stopFullAnimation();
+    stopRecording();
+    const modeMap = {
+        'Линии': 'Lines',
+        'Точки': 'Dots',
+        'Фигуры': 'Shapes',
+        'Смешанный': 'Mixed',
+        'Спираль': 'Spiral',
+        'Орбиты': 'Orbit',
+        'Точки в Фигуры': 'DotToShape',
+        'Точки в Смешанный': 'DotsToMixed'
+    };
+    const mode = modeMap[document.getElementById('modeCombo').value];
+    const elements = parseInt(document.getElementById('elementSlider').value);
+    const slices = parseInt(document.getElementById('slicesSlider').value);
+    generator = new KaleidoGenerator(CANVAS_PX, palette, mode, 12, elements, slices);
+    const textureCanvas = generator.generateTextureCanvas();
+    currentTextureCanvas = textureCanvas;
+    update3DTexture(previewSphere, textureCanvas);
+}
+function animate() {
+    if (!generator) {
+        alert('Сначала сгенерируйте узор!');
+        return;
+    }
+    isAnimating = !isAnimating;
+    const animateBtn = document.getElementById('animateBtn');
+    if (isAnimating) {
+        animateBtn.textContent = 'Остановить';
+        animateBtn.classList.add('active');
+        startTime = Date.now();
+        requestAnimationFrame(animateLoop);
+    } else {
+        animateBtn.textContent = 'Анимировать';
+        animateBtn.classList.remove('active');
+        cancelAnimationFrame(animationFrameId);
+    }
+}
+function animateLoop() {
+    if (!isAnimating || !generator) {
+        return;
+    }
+    const elapsedTime = (Date.now() - startTime) / 1000;
+    const textureCanvas = generator.generateTextureCanvas(true, elapsedTime);
+    currentTextureCanvas = textureCanvas;
+    update3DTexture(previewSphere, textureCanvas);
+    animationFrameId = requestAnimationFrame(animateLoop);
+}
+function stopAnimation() {
+    if (isAnimating) {
+        isAnimating = false;
+        document.getElementById('animateBtn').textContent = 'Анимировать';
+        document.getElementById('animateBtn').classList.remove('active');
+        cancelAnimationFrame(animationFrameId);
+    }
+}
+function openFullImage() {
+    if (!generator) {
+        alert('Сначала сгенерируйте узор!');
+        return;
+    }
+    stopAnimation();
+    const modal = document.getElementById('imageModal');
+    const gen = new KaleidoGenerator(MAIN_PX, palette, generator.mode, generator.sectors, generator.elements, generator.slices);
+    const textureCanvas = gen.generateTextureCanvas();
+    update3DTexture(fullSphere, textureCanvas);
+    modal.classList.add('show');
+    isFullAnimating = true;
+    fullStartTime = Date.now();
+    requestAnimationFrame(() => animateFullLoop(gen));
+}
+function animateFullLoop(gen) {
+    if (!isFullAnimating || !gen) {
+        return;
+    }
+    const elapsedTime = (Date.now() - fullStartTime) / 1000;
+    const textureCanvas = gen.generateTextureCanvas(true, elapsedTime);
+    update3DTexture(fullSphere, textureCanvas);
+    fullAnimationFrameId = requestAnimationFrame(() => animateFullLoop(gen));
+}
+function stopFullAnimation() {
+    if (isFullAnimating) {
+        isFullAnimating = false;
+        cancelAnimationFrame(fullAnimationFrameId);
+    }
+}
+function save() {
+    if (!currentTextureCanvas) {
+        alert('Сначала сгенерируйте узор!');
+        return;
+    }
+    const link = document.createElement('a');
+    link.download = 'калейдоскоп.png';
+    link.href = currentTextureCanvas.toDataURL('image/png');
+    link.click();
+}
+function startStopRecording() {
+    if (!generator) {
+        alert('Сначала сгенерируйте узор!');
+        return;
+    }
+    const recordBtn = document.getElementById('recordBtn');
+    const downloadVideoBtn = document.getElementById('downloadVideoBtn');
+    const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.4D401E') ? 'video/mp4;codecs=avc1.4D401E' : 'video/webm;codecs=vp9';
+    const fileExtension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
+    if (!isRecording) {
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+            alert(`Формат ${fileExtension.toUpperCase()} не поддерживается вашим браузером. Попробуйте другой браузер, например Chrome.`);
+            return;
+        }
+        if (!isAnimating) {
+            isAnimating = true;
+            startTime = Date.now();
+            requestAnimationFrame(animateLoop);
+            document.getElementById('animateBtn').textContent = 'Остановить';
+            document.getElementById('animateBtn').classList.add('active');
+        }
+        recordedChunks = [];
+        const stream = previewRenderer.domElement.captureStream(isMobile ? 30 : 60);
+        try {
+            mediaRecorder = new MediaRecorder(stream, {
+                mimeType: mimeType,
+                videoBitsPerSecond: isMobile ? 10000000 : 20000000
+            });
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    recordedChunks.push(event.data);
+                }
+            };
+            mediaRecorder.onstop = () => {
+                downloadVideoBtn.disabled = recordedChunks.length === 0;
+                resetRecordTimer();
+            };
+            mediaRecorder.onerror = (event) => {
+                console.error('MediaRecorder error:', event.error);
+                alert('Ошибка при записи видео: ' + event.error.message);
+                stopRecording();
+            };
+            mediaRecorder.start();
+            isRecording = true;
+            recordBtn.textContent = 'Стоп запись';
+            recordBtn.classList.add('active');
+            recordStartTime = Date.now();
+            recordTimerId = setInterval(updateRecordTimer, 1000);
+        } catch (e) {
+            console.error('Failed to start recording:', e);
+            alert('Не удалось начать запись. Формат MP4 может быть неподдерживаемым. Попробуйте браузер Chrome.');
+        }
+    } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        recordBtn.textContent = 'Старт запись';
+        recordBtn.classList.remove('active');
+    }
+}
+function downloadVideo() {
+    if (recordedChunks.length === 0) {
+        alert('Нет записанного видео для скачивания!');
+        return;
+    }
+    const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.4D401E') ? 'video/mp4' : 'video/webm';
+    const fileExtension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
+    const blob = new Blob(recordedChunks, { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `калейдоскоп.${fileExtension}`;
+    link.click();
+    URL.revokeObjectURL(url);
+    recordedChunks = [];
+    document.getElementById('downloadVideoBtn').disabled = true;
+}
+function stopRecording() {
+    if (isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        document.getElementById('recordBtn').textContent = 'Старт запись';
+        document.getElementById('recordBtn').classList.remove('active');
+        document.getElementById('downloadVideoBtn').disabled = recordedChunks.length === 0;
+        resetRecordTimer();
+    }
+}
+// Инициализация 3D сцен
+const preview3D = init3D(previewContainer, 300);
+previewScene = preview3D.scene;
+previewCamera = preview3D.camera;
+previewRenderer = preview3D.renderer;
+previewSphere = preview3D.sphere;
+previewControls = preview3D.controls;
+const full3D = init3D(fullContainer, 800, false);
+fullScene = full3D.scene;
+fullCamera = full3D.camera;
+fullRenderer = full3D.renderer;
+fullSphere = full3D.sphere;
+fullControls = full3D.controls;
+// События
+document.getElementById('elementSlider').addEventListener('input', (e) => {
+    document.getElementById('elementValue').textContent = e.target.value;
+    stopAnimation();
+    stopFullAnimation();
+    stopRecording();
 });
-</script>
+document.getElementById('slicesSlider').addEventListener('input', (e) => {
+    document.getElementById('slicesValue').textContent = e.target.value;
+    stopAnimation();
+    stopFullAnimation();
+    stopRecording();
+});
+document.getElementById('animationSpeedSlider').addEventListener('input', (e) => {
+    ANIMATION_SPEED = parseFloat(e.target.value);
+    document.getElementById('animationSpeedValue').textContent = ANIMATION_SPEED.toFixed(2);
+});
+document.getElementById('modeCombo').addEventListener('change', () => {
+    const selectedValue = document.getElementById('modeCombo').value;
+    if (selectedValue === 'Crystal') {
+        window.location.href = 'kalei.html';
+    } else {
+        stopAnimation();
+        stopFullAnimation();
+        stopRecording();
+    }
+});
+document.getElementById('addColorBtn').addEventListener('click', () => {
+    addColor();
+    stopAnimation();
+    stopFullAnimation();
+    stopRecording();
+});
+document.getElementById('removeColorBtn').addEventListener('click', () => {
+    removeColor();
+    stopAnimation();
+    stopFullAnimation();
+    stopRecording();
+});
+document.getElementById('generateBtn').addEventListener('click', generate);
+document.getElementById('animateBtn').addEventListener('click', animate);
+document.getElementById('recordBtn').addEventListener('click', startStopRecording);
+document.getElementById('downloadVideoBtn').addEventListener('click', downloadVideo);
+document.getElementById('viewBtn').addEventListener('click', openFullImage);
+document.getElementById('saveBtn').addEventListener('click', save);
+document.getElementById('closeModalBtn').addEventListener('click', () => {
+    stopFullAnimation();
+    document.getElementById('imageModal').classList.remove('show');
+});
+document.getElementById('home').addEventListener('click', () => {
+    stopAnimation();
+    stopFullAnimation();
+    stopRecording();
+    window.location.href = 'index.html';
+});
+document.getElementById('changeBackgroundColorBtn').addEventListener('click', changeBackgroundColor);
+updatePaletteTable();
+loadBackgroundColor();
+    </script>
 </body>
 </html>

@@ -156,6 +156,7 @@
                                 <option>Точки в Смешанный</option>
                                 <option value="Crystal"><a href="kalei.html">Кристаллическое (избранное)</a></option>
                                 <option value="Sphere"><a href="test.html">3Д СФЕРА (избранное)</a></option>
+                                <option value="Kovrov"><a href="kovrov.html">Ковер (избранное)</a></option>
                             </select>
                         </div>
                         <div>
@@ -1195,6 +1196,16 @@ document.getElementById('modeCombo').addEventListener('change', () => {
     const selectedValue = document.getElementById('modeCombo').value;
     if (selectedValue === 'Sphere') {
         window.location.href = 'test.html';
+    } else {
+        stopAnimation();
+        stopFullAnimation();
+        stopRecording();
+    }
+});
+document.getElementById('modeCombo').addEventListener('change', () => {
+    const selectedValue = document.getElementById('modeCombo').value;
+    if (selectedValue === 'Kover') {
+        window.location.href = 'kovrov.html';
     } else {
         stopAnimation();
         stopFullAnimation();

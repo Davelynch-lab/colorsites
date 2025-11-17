@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор паттернов для ковров</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #6b7280, #4c1d95);
+            min-height: 100vh;
+        }
+        canvas {
+            background-color: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .color-btn {
+            width: 100%;
+            height: 36px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            transition: transform 0.2s;
+        }
+        .color-btn:hover {
+            transform: scale(1.05);
+        }
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 6px;
+            border-radius: 6px;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+        #previewCanvas {
+            max-width: 600px;
+            width: 100%;
+        }
+        #fullCanvas {
+            max-width: 1200px;
+            width: 100%;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        #backgroundColorPreview {
+            width: 100%;
+            height: 36px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+        .custom-range::-webkit-slider-thumb {
+            background: #7c3aed;
+        }
+        .custom-range::-moz-range-thumb {
+            background: #7c3aed;
+        }
+        #imageModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        #pdfModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        #imageModal.show, #pdfModal.show {
+            display: flex;
+        }
+        details summary {
+            cursor: pointer;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #4c1d95;
+            padding: 0.5rem;
+        }
+        details summary:hover {
+            color: #7c3aed;
+        }
+        details p {
+            margin-top: 0.5rem;
+            color: #374151;
+        }
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.75rem;
+        }
+        .action-buttons button {
+            flex: 1;
+            padding: 0.75rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-900">
+    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-7xl">
+        <details class="card p-4 rounded-xl shadow-lg mb-6">
+            <summary>Инструкции</summary>
+            <p>Добро пожаловать в Генератор паттернов для ковров! Следуйте этим шагам:</p>
+            <ul class="list-disc pl-5 mt-2">
+                <li><strong>Выбор узора:</strong> Выберите тип узора (Линии, Точки, Фигуры, Смешанный, Спираль, Орбиты, Точки в Фигуры, Точки в Смешанный, Ковер, Органический).</li>
+                <li><strong>Настройка параметров:</strong> Регулируйте количество элементов (100–1000), секторов (3–40), тайлов по ширине (1–10) и высоте (1–5). Общее количество тайлов = ширина * высота: 1 большой в центре, остальные поменьше вокруг случайно.</li>
+                <li><strong>Палитра:</strong> Добавляйте до 20 цветов, удаляйте или изменяйте их.</li>
+                <li><strong>Генерация:</strong> Нажмите "Сгенерировать" для создания паттерна.</li>
+                <li><strong>Просмотр:</strong> Нажмите "Открыть полный паттерн" для просмотра большого изображения.</li>
+                <li><strong>Сохранение:</strong> Нажмите "Сохранить изображение" для скачивания PNG (статичный паттерн). Для PDF нажмите "Сохранить как PDF" и выберите размер (стандартные форматы или кастомный в см). Паттерн будет адаптирован для вертикальной ориентации и заполнит лист.</li>
+                <li><strong>Возврат:</strong> Нажмите "← Вернуться" для возврата на главную.</li>
+            </ul>
+        </details>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-white mb-8 drop-shadow-lg">Генератор паттернов для ковров</h1>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="space-y-6">
+                <div class="card p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold mb-4 text-indigo-700">Настройки узора</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-gray-700">Тип узора</label>
+                            <select id="modeCombo" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500" title="Выберите тип узора">
+                                <option>Линии</option>
+                                <option>Точки</option>
+                                <option>Фигуры</option>
+                                <option>Смешанный</option>
+                                <option>Спираль</option>
+                                <option>Орбиты</option>
+                                <option>Точки в Фигуры</option>
+                                <option>Точки в Смешанный</option>
+                                <option>Ковер</option>
+                                <option>Органический</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-gray-700">Количество элементов: <span id="elementValue" class="font-bold">300</span></label>
+                            <input type="range" id="elementSlider" min="100" max="1000" value="300" class="w-full custom-range" title="Количество элементов">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-gray-700">Количество секторов: <span id="slicesValue" class="font-bold">13</span></label>
+                            <input type="range" id="slicesSlider" min="3" max="40" value="13" class="w-full custom-range" title="Количество секторов">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-gray-700">Тайлы по ширине: <span id="tileWidthValue" class="font-bold">2</span></label>
+                            <input type="range" id="tileWidthSlider" min="1" max="10" value="2" class="w-full custom-range" title="Количество тайлов по ширине">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-gray-700">Тайлы по высоте: <span id="tileHeightValue" class="font-bold">1</span></label>
+                            <input type="range" id="tileHeightSlider" min="1" max="5" value="1" class="w-full custom-range" title="Количество тайлов по высоте">
+                        </div>
+                    </div>
+                </div>
+                <div class="card p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold mb-4 text-indigo-700">Палитра цветов</h2>
+                    <div class="overflow-x-auto">
+                        <table id="paletteTable" class="w-full border-collapse mb-4">
+                            <thead>
+                                <tr>
+                                    <th class="border-b-2 p-3 text-left text-gray-700 w-16">Ключ</th>
+                                    <th class="border-b-2 p-3 text-left text-gray-700">Цвет</th>
+                                    <th class="border-b-2 p-3 text-left text-gray-700 w-24">Действие</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button id="addColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors" title="Добавить цвет">Добавить цвет</button>
+                        <button id="removeColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors" title="Удалить последний цвет">Удалить последний</button>
+                        <button id="changeBackgroundColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors" title="Изменить цвет фона">Выбрать цвет фона</button>
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-6">
+                <div class="card p-6 rounded-xl shadow-lg flex justify-center items-center">
+                    <div>
+                        <h2 class="text-xl font-semibold mb-4 text-indigo-700 text-center">Предпросмотр</h2>
+                        <canvas id="previewCanvas" class="mx-auto"></canvas>
+                    </div>
+                </div>
+                <div class="card p-6 rounded-xl shadow-lg">
+                    <div class="action-buttons">
+                        <button id="generateBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Создать паттерн">Сгенерировать</button>
+                        <button id="viewBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Открыть полный паттерн">Открыть полный паттерн</button>
+                        <button id="saveBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Сохранить паттерн">Сохранить изображение</button>
+                        <button id="savePdfBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Сохранить как PDF">Сохранить как PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button id="home" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors" style="margin-top: 20px;" title="Вернуться">← Вернуться</button>
+        <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center p-4 z-50">
+            <div class="bg-white p-6 rounded-xl max-w-[90vw] max-h-[90vh] overflow-auto">
+                <canvas id="fullCanvas" class="mx-auto"></canvas>
+                <div class="text-center mt-4">
+                    <button id="closeModalBtn" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors" title="Закрыть">Закрыть</button>
+                </div>
+            </div>
+        </div>
+        <div id="pdfModal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center p-4 z-50">
+            <div class="bg-white p-6 rounded-xl max-w-md w-full">
+                <h2 class="text-xl font-semibold mb-4 text-indigo-700">Настройки PDF</h2>
+                <label class="block text-sm font-medium mb-1 text-gray-700">Формат бумаги</label>
+                <select id="paperSize" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500">
+                    <option value="a4-portrait">A4 Portrait (21 x 29.7 cm)</option>
+                    <option value="a4-landscape">A4 Landscape (29.7 x 21 cm)</option>
+                    <option value="a3-portrait">A3 Portrait (29.7 x 42 cm)</option>
+                    <option value="a3-landscape">A3 Landscape (42 x 29.7 cm)</option>
+                    <option value="custom">Custom</option>
+                </select>
+                <div id="customSizeDiv" class="hidden mt-4">
+                    <label class="block text-sm font-medium mb-1 text-gray-700">Ширина (см)</label>
+                    <input type="number" id="customWidth" min="1" step="0.1" class="w-full p-3 border border-gray-300 rounded-lg" value="21">
+                    <label class="block text-sm font-medium mt-2 mb-1 text-gray-700">Высота (см)</label>
+                    <input type="number" id="customHeight" min="1" step="0.1" class="w-full p-3 border border-gray-300 rounded-lg" value="29.7">
+                </div>
+                <div class="text-center mt-6">
+                    <button id="generatePdfBtn" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700">Генерировать PDF</button>
+                    <button id="closePdfModalBtn" class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 ml-2">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const DPI = 300;
+        const CM_TO_INCH = 1 / 2.54;
+        const MAIN_CM = 15;
+        const BORDER_CM = 1;
+        const PREVIEW_TILE_PX = 300;
+        const PREVIEW_BORDER_PX = 20;
+        const FULL_TILE_PX = Math.round(MAIN_CM * CM_TO_INCH * DPI);
+        let backgroundColor = [165, 42, 42, 1]; // Default to a brown carpet-like color
+        const DEFAULT_PALETTE = {
+            '1': [139, 0, 0, 1], // Dark red
+            '2': [0, 0, 139, 1], // Dark blue
+            '3': [218, 165, 32, 1], // Golden
+            '4': [0, 100, 0, 1], // Dark green
+            '5': [255, 215, 0, 1] // Gold
+        };
+        const AVAILABLE_COLORS = [
+            [139, 0, 0, 1],
+            [0, 0, 139, 1],
+            [218, 165, 32, 1],
+            [0, 100, 0, 1],
+            [255, 215, 0, 1],
+            [128, 0, 0, 1],
+            [0, 0, 128, 1]
+        ];
+        let colorIndex = 0;
+        class PRNG {
+            constructor(seed) {
+                this.seed = seed % 2147483647;
+                if (this.seed <= 0) this.seed += 2147483646;
+            }
+            next() {
+                return this.seed = (this.seed * 16807) % 2147483647;
+            }
+            random() {
+                return (this.next() - 1) / 2147483646;
+            }
+        }
+        function drawShape(ctx, shapeType, x, y, size, rotation, color) {
+            ctx.fillStyle = `rgba(${color.join(',')})`;
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rotation);
+            ctx.beginPath();
+            if (shapeType === 'square') {
+                ctx.rect(-size, -size, size * 2, size * 2);
+            } else if (shapeType === 'circle') {
+                ctx.arc(0, 0, size, 0, 2 * Math.PI);
+            } else if (shapeType === 'triangle') {
+                ctx.moveTo(0, -size);
+                ctx.lineTo(size * Math.sqrt(3) / 2, size / 2);
+                ctx.lineTo(-size * Math.sqrt(3) / 2, size / 2);
+                ctx.closePath();
+            } else if (shapeType === 'diamond') {
+                ctx.moveTo(0, -size);
+                ctx.lineTo(size, 0);
+                ctx.lineTo(0, size);
+                ctx.lineTo(-size, 0);
+                ctx.closePath();
+            } else if (shapeType === 'star') {
+                let rot = Math.PI / 2 * 3;
+                let step = Math.PI / 5;
+                ctx.moveTo(0, -size);
+                for (let j = 0; j < 5; j++) {
+                    let sx = Math.cos(rot) * size;
+                    let sy = Math.sin(rot) * size;
+                    ctx.lineTo(sx, sy);
+                    rot += step;
+                    sx = Math.cos(rot) * (size / 2.6);
+                    sy = Math.sin(rot) * (size / 2.6);
+                    ctx.lineTo(sx, sy);
+                    rot += step;
+                }
+                ctx.closePath();
+            } else if (shapeType === 'flower') {
+                for (let p = 0; p < 6; p++) {
+                    ctx.save();
+                    ctx.rotate(p * Math.PI / 3);
+                    ctx.ellipse(size / 2, 0, size / 2, size / 4, 0, 0, 2 * Math.PI);
+                    ctx.restore();
+                }
+                ctx.arc(0, 0, size / 4, 0, 2 * Math.PI);
+            } else if (shapeType === 'bird') {
+                ctx.moveTo(-size, size / 2);
+                ctx.quadraticCurveTo(0, -size, size, 0);
+                ctx.quadraticCurveTo(0, size, -size, size / 2);
+                ctx.closePath();
+            } else if (shapeType === 'boteh') {
+                ctx.moveTo(0, -size);
+                ctx.bezierCurveTo(size * 0.8, -size * 0.8, size * 1.2, -size * 0.2, size, 0);
+                ctx.bezierCurveTo(size * 0.8, size * 0.2, size * 0.4, size * 0.4, 0, size * 0.3);
+                ctx.bezierCurveTo(-size * 0.4, size * 0.4, -size * 0.8, size * 0.2, -size * 0.5, 0);
+                ctx.bezierCurveTo(-size * 0.8, -size * 0.2, -size * 0.4, -size * 0.8, 0, -size);
+                ctx.closePath();
+            }
+            ctx.fill();
+            ctx.restore();
+        }
+        class KaleidoGenerator {
+            constructor(tile_size, palette, mode = 'Lines', sectors = 12, elements = 300, slices = 13, prng = null) {
+                this.tile_size = tile_size;
+                this.palette = Object.values(palette);
+                this.mode = mode;
+                this.sectors = slices;
+                this.base_elements = elements;
+                this.slices = slices;
+                this.sizeScale = this.tile_size / PREVIEW_TILE_PX;
+                this.elements = this.base_elements; // No scaling for number of elements
+                this.prng = prng || {random: Math.random};
+                this.branch_settings = {
+                    size: 150 * this.sizeScale,
+                    angle: 0.4,
+                    scale: 0.67,
+                    iterations: Math.max(1, Math.floor(this.elements / 100)),
+                    offset: 0,
+                    spiral_density: 0.05,
+                };
+                this.elementsData = [];
+                this.initElements();
+            }
+            initElements() {
+                const random = this.prng.random.bind(this.prng);
+                this.elementsData = [];
+                const angle = 360 / this.sectors;
+                const shapeTypes = ['square', 'circle', 'triangle', 'diamond', 'star', 'flower', 'bird', 'boteh'];
+                if (this.mode === 'Lines') {
+                    for (let i = 0; i < this.elements; i++) {
+                        const theta = (random() * angle - angle / 2) * Math.PI / 180;
+                        this.elementsData.push({
+                            r1: 0,
+                            theta1: 0,
+                            r2: Math.sqrt(random()),
+                            theta2: theta,
+                            colorIdx: Math.floor(random() * this.palette.length),
+                            lineWidth: (Math.floor(random() * 4) + 1) * this.sizeScale
+                        });
+                    }
+                } else if (this.mode === 'Dots') {
+                    for (let i = 0; i < this.elements; i++) {
+                        const r = Math.pow(random(), 0.5);
+                        const theta = (random() - 0.5) * angle * Math.PI / 180;
+                        this.elementsData.push({
+                            r,
+                            theta,
+                            colorIdx: Math.floor(random() * this.palette.length),
+                            size_dot: ((1 - r) * 10 + 5) * this.sizeScale
+                        });
+                    }
+                } else if (this.mode === 'Shapes') {
+                    for (let i = 0; i < this.elements; i++) {
+                        const r = Math.pow(random(), 0.5);
+                        const theta = (random() - 0.5) * angle * Math.PI / 180;
+                        this.elementsData.push({
+                            r,
+                            theta,
+                            colorIdx: Math.floor(random() * this.palette.length),
+                            size_sq: ((1 - r) * 20 + 8) * this.sizeScale,
+                            shapeType: shapeTypes[Math.floor(random() * shapeTypes.length)],
+                            rotation: random() * 2 * Math.PI
+                        });
+                    }
+                } else if (this.mode === 'Mixed') {
+                    for (let i = 0; i < this.elements; i++) {
+                        const type = ['Lines', 'Dots', 'Shapes'][Math.floor(random() * 3)];
+                        const r = Math.pow(random(), 0.5);
+                        const theta = (random() - 0.5) * angle * Math.PI / 180;
+                        if (type === 'Lines') {
+                            this.elementsData.push({
+                                type: 'Lines',
+                                r1: 0,
+                                theta1: 0,
+                                r2: r,
+                                theta2: theta,
+                                colorIdx: Math.floor(random() * this.palette.length),
+                                lineWidth: (Math.floor(random() * 4) + 1) * this.sizeScale
+                            });
+                        } else if (type === 'Dots') {
+                            this.elementsData.push({
+                                type: 'Dots',
+                                r,
+                                theta,
+                                colorIdx: Math.floor(random() * this.palette.length),
+                                size_dot: ((1 - r) * 10 + 5) * this.sizeScale
+                            });
+                        } else {
+                            this.elementsData.push({
+                                type: 'Shapes',
+                                r,
+                                theta,
+                                colorIdx: Math.floor(random() * this.palette.length),
+                                size_sq: ((1 - r) * 20 + 8) * this.sizeScale,
+                                shapeType: shapeTypes[Math.floor(random() * shapeTypes.length)],
+                                rotation: random() * 2 * Math.PI
+                            });
+                        }
+                    }
+                } else if (this.mode === 'Spiral') {
+                    const spiral_count = Math.floor(this.elements / 10);
+                    for (let i = 0; i < spiral_count; i++) {
+                        this.elementsData.push({
+                            theta_start: (random() * angle - angle / 2) * Math.PI / 180,
+                            color_idx: Math.floor(random() * this.palette.length)
+                        });
+                    }
+                } else if (this.mode === 'Orbit') {
+                    const diameter = this.tile_size;
+                    const a = 0.266746, b = 0.321596, c = 0.223138;
+                    this.elementsData = [
+                        { class: 'a', width: diameter * a, top: (diameter/2 - (diameter*a/2)) * 0.60, left: diameter/2 - (diameter*a/2) },
+                        { class: 'a', width: diameter * a, top: (diameter/2 - (diameter*a/2)) * 1.22, left: (diameter/2 - (diameter*a/2)) * 0.65 },
+                        { class: 'a', width: diameter * a, top: (diameter/2 - (diameter*a/2)) * 1.22, right: (diameter/2 - (diameter*a/2)) * 0.65 },
+                        { class: 'b', width: diameter * b, top: (diameter/2 - (diameter*b/2)) * 0.52, left: diameter*b/7 },
+                        { class: 'b', width: diameter * b, top: (diameter/2 - (diameter*b/2)) * 0.52, right: diameter*b/7 },
+                        { class: 'b', width: diameter * b, bottom: 0, left: diameter/2 - (diameter*b/2) },
+                        { class: 'c', width: diameter * c, top: diameter*c/15, left: diameter*c * 1.23 },
+                        { class: 'c', width: diameter * c, top: diameter*c/15, right: diameter*c * 1.23 },
+                        { class: 'c', width: diameter * c, bottom: diameter*c/2.3, left: diameter*c * 0.55 },
+                        { class: 'c', width: diameter * c, bottom: diameter*c * 1.3, left: diameter*c * 0.05 },
+                        { class: 'c', width: diameter * c, bottom: diameter*c/2.3, right: diameter*c * 0.55 },
+                        { class: 'c', width: diameter * c, bottom: diameter*c * 1.3, right: diameter*c * 0.05 },
+                        { class: 'center', width: diameter * a, top: diameter/2 - (diameter*a/2), left: diameter/2 - (diameter*a/2) },
+                        { class: 'tile-cover', width: diameter, top: 0, left: 0 },
+                        { class: 'tile-back', width: diameter, top: 0, left: 0 },
+                    ];
+                } else if (this.mode === 'DotToShape') {
+                    for (let i = 0; i < this.elements; i++) {
+                        const r = Math.pow(random(), 0.5);
+                        const theta = (random() - 0.5) * angle * Math.PI / 180;
+                        this.elementsData.push({
+                            r,
+                            theta,
+                            colorIdx: Math.floor(random() * this.palette.length),
+                            size_dot: ((1 - r) * 10 + 5) * this.sizeScale,
+                            size_sq: ((1 - r) * 20 + 8) * this.sizeScale
+                        });
+                    }
+                } else if (this.mode === 'DotsToMixed') {
+                    for (let i = 0; i < this.elements; i++) {
+                        const type = ['Lines', 'Dots', 'Shapes'][Math.floor(random() * 3)];
+                        const r = Math.pow(random(), 0.5);
+                        const theta = (random() - 0.5) * angle * Math.PI / 180;
+                        this.elementsData.push({
+                            r,
+                            theta,
+                            colorIdx: Math.floor(random() * this.palette.length),
+                            size_dot: ((1 - r) * 10 + 5) * this.sizeScale,
+                            type: type,
+                            r1: type === 'Lines' ? 0 : null,
+                            theta1: type === 'Lines' ? 0 : null,
+                            r2: type === 'Lines' ? r : null,
+                            theta2: type === 'Lines' ? theta : null,
+                            lineWidth: type === 'Lines' ? (Math.floor(random() * 4) + 1) * this.sizeScale : null,
+                            size_sq: type === 'Shapes' ? ((1 - r) * 20 + 8) * this.sizeScale : null
+                        });
+                    }
+                } else if (this.mode === 'Organic') {
+                    for (let i = 0; i < this.elements; i++) {
+                        const r = Math.pow(random(), 0.5);
+                        const theta = (random() - 0.5) * angle * Math.PI / 180;
+                        const elemType = ['dot', 'shape', 'line'][Math.floor(random() * 3)];
+                        const colorIdx = Math.floor(random() * this.palette.length);
+                        const size = ((1 - r) * 15 + 6) * this.sizeScale;
+                        if (elemType === 'dot') {
+                            this.elementsData.push({
+                                type: 'Dots',
+                                r, theta, colorIdx,
+                                size_dot: size
+                            });
+                        } else if (elemType === 'line') {
+                            this.elementsData.push({
+                                type: 'Lines',
+                                r1: r * 0.5, theta1: theta - 0.1,
+                                r2: r, theta2: theta + 0.1,
+                                colorIdx, lineWidth: (random() * 3 + 1) * this.sizeScale
+                            });
+                        } else {
+                            this.elementsData.push({
+                                type: 'Shapes',
+                                r, theta, colorIdx,
+                                size_sq: size,
+                                shapeType: shapeTypes[Math.floor(random() * shapeTypes.length)],
+                                rotation: random() * 2 * Math.PI
+                            });
+                        }
+                    }
+                }
+            }
+            generateTile(canvas) {
+                const ctx = canvas.getContext('2d');
+                canvas.width = this.tile_size;
+                canvas.height = this.tile_size;
+                // No initial fill, to have transparent background
+                const main = this._makeKaleidoSquare();
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.tile_size / 2, this.tile_size / 2, this.tile_size / 2, 0, 2 * Math.PI);
+                ctx.clip();
+                ctx.drawImage(main, 0, 0);
+                ctx.restore();
+            }
+            _interpolateColor(color1, color2, factor) {
+                return [
+                    Math.round(color1[0] * (1 - factor) + color2[0] * factor),
+                    Math.round(color1[1] * (1 - factor) + color2[1] * factor),
+                    Math.round(color1[2] * (1 - factor) + color2[2] * factor),
+                    color1[3] * (1 - factor) + color2[3] * factor
+                ];
+            }
+            _makeTrianglifyPattern(width, height) {
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                const cell_size = 50 * this.sizeScale;
+                for (let i = 0; i < width; i += cell_size) {
+                    for (let j = 0; j < height; j += cell_size) {
+                        const points = [
+                            [i, j],
+                            [i + cell_size, j],
+                            [i + cell_size, j + cell_size],
+                            [i, j + cell_size],
+                        ];
+                        const colorIdx1 = Math.floor((i / cell_size + j / cell_size) % this.palette.length);
+                        const colorIdx2 = Math.floor((i / cell_size + j / cell_size + 1) % this.palette.length);
+                        const color1 = this.palette[colorIdx1];
+                        const color2 = this.palette[colorIdx2];
+                        ctx.fillStyle = `rgba(${color1.join(',')})`;
+                        ctx.beginPath();
+                        ctx.moveTo(points[0][0], points[0][1]);
+                        ctx.lineTo(points[1][0], points[1][1]);
+                        ctx.lineTo(points[2][0], points[2][1]);
+                        ctx.fill();
+                        ctx.fillStyle = `rgba(${color2.join(',')})`;
+                        ctx.beginPath();
+                        ctx.moveTo(points[0][0], points[0][1]);
+                        ctx.lineTo(points[2][0], points[2][1]);
+                        ctx.lineTo(points[3][0], points[3][1]);
+                        ctx.fill();
+                    }
+                }
+                return canvas;
+            }
+            _makeKaleidoSquare() {
+                const random = this.prng.random.bind(this.prng);
+                const canvas = document.createElement('canvas');
+                canvas.width = this.tile_size;
+                canvas.height = this.tile_size;
+                const ctx = canvas.getContext('2d');
+                const radius = this.tile_size / 2;
+                const angle = 360 / this.sectors;
+                const cx = radius, cy = radius;
+                const rotationOffset = 0;
+                if (this.mode === 'Carpet') {
+                    this.drawSierpinski(ctx, 0, 0, this.tile_size, 5);
+                } else if (this.mode === 'Lines') {
+                    for (let i = 0; i < this.elementsData.length; i++) {
+                        const data = this.elementsData[i];
+                        const color = this.palette[data.colorIdx];
+                        ctx.strokeStyle = `rgba(${color.join(',')})`;
+                        const x1 = cx + data.r1 * radius * Math.cos(data.theta1);
+                        const y1 = cy + data.r1 * radius * Math.sin(data.theta1);
+                        const x2 = cx + data.r2 * radius * Math.cos(data.theta2);
+                        const y2 = cy + data.r2 * radius * Math.sin(data.theta2);
+                        ctx.lineWidth = data.lineWidth;
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y1);
+                        ctx.quadraticCurveTo(cx, cy, x2, y2);
+                        ctx.stroke();
+                    }
+                } else if (this.mode === 'Dots') {
+                    for (let i = 0; i < this.elementsData.length; i++) {
+                        const data = this.elementsData[i];
+                        const color = this.palette[data.colorIdx];
+                        ctx.fillStyle = `rgba(${color.join(',')})`;
+                        const x = cx + data.r * radius * Math.cos(data.theta);
+                        const y = cy + data.r * radius * Math.sin(data.theta);
+                        ctx.beginPath();
+                        ctx.arc(x, y, data.size_dot, 0, 2 * Math.PI);
+                        ctx.fill();
+                    }
+                } else if (this.mode === 'Shapes') {
+                    for (let i = 0; i < this.elementsData.length; i++) {
+                        const data = this.elementsData[i];
+                        const color = this.palette[data.colorIdx];
+                        const x = cx + data.r * radius * Math.cos(data.theta);
+                        const y = cy + data.r * radius * Math.sin(data.theta);
+                        const size = data.size_sq;
+                        drawShape(ctx, data.shapeType, x, y, size, data.rotation, color);
+                    }
+                } else if (this.mode === 'Mixed') {
+                    for (let i = 0; i < this.elementsData.length; i++) {
+                        const data = this.elementsData[i];
+                        const color = this.palette[data.colorIdx];
+                        ctx.fillStyle = `rgba(${color.join(',')})`;
+                        ctx.strokeStyle = `rgba(${color.join(',')})`;
+                        if (data.type === 'Lines') {
+                            const x1 = cx + data.r1 * radius * Math.cos(data.theta1);
+                            const y1 = cy + data.r1 * radius * Math.sin(data.theta1);
+                            const x2 = cx + data.r2 * radius * Math.cos(data.theta2);
+                            const y2 = cy + data.r2 * radius * Math.sin(data.theta2);
+                            ctx.lineWidth = data.lineWidth;
+                            ctx.beginPath();
+                            ctx.moveTo(x1, y1);
+                            ctx.quadraticCurveTo(cx, cy, x2, y2);
+                            ctx.stroke();
+                        } else if (data.type === 'Dots') {
+                            const x = cx + data.r * radius * Math.cos(data.theta);
+                            const y = cy + data.r * radius * Math.sin(data.theta);
+                            ctx.beginPath();
+                            ctx.arc(x, y, data.size_dot, 0, 2 * Math.PI);
+                            ctx.fill();
+                        } else {
+                            const x = cx + data.r * radius * Math.cos(data.theta);
+                            const y = cy + data.r * radius * Math.sin(data.theta);
+                            const size = data.size_sq;
+                            drawShape(ctx, data.shapeType, x, y, size, data.rotation, color);
+                        }
+                    }
+                } else if (this.mode === 'Spiral') {
+                    const s = this.branch_settings;
+                    for (let i = 0; i < this.elementsData.length; i++) {
+                        let theta_start = this.elementsData[i].theta_start;
+                        let color_idx = this.elementsData[i].color_idx;
+                        const next_color_idx = (color_idx + 1) % this.palette.length;
+                        for (let r = 0; r < radius; r += 2 * this.sizeScale) {
+                            const theta = theta_start + r * s.spiral_density;
+                            const x = cx + r * Math.cos(theta);
+                            const y = cy + r * Math.sin(theta);
+                            const colorFactor = (r * 0.1) % 1;
+                            const r_col = Math.round(this.palette[color_idx][0] * (1 - colorFactor) + this.palette[next_color_idx][0] * colorFactor);
+                            const g_col = Math.round(this.palette[color_idx][1] * (1 - colorFactor) + this.palette[next_color_idx][1] * colorFactor);
+                            const b_col = Math.round(this.palette[color_idx][2] * (1 - colorFactor) + this.palette[next_color_idx][2] * colorFactor);
+                            const a_col = this.palette[color_idx][3] * (1 - colorFactor) + this.palette[next_color_idx][3] * colorFactor;
+                            const width = Math.max(2 * this.sizeScale, 4 * this.sizeScale + random() * 5 * this.sizeScale);
+                            ctx.fillStyle = `rgba(${r_col}, ${g_col}, ${b_col}, ${a_col})`;
+                            ctx.beginPath();
+                            ctx.arc(x, y, width, 0, 2 * Math.PI);
+                            ctx.fill();
+                        }
+                    }
+                } else if (this.mode === 'Orbit') {
+                    const diameter = this.tile_size;
+                    for (const config of this.elementsData) {
+                        const width = config.width;
+                        const height = width;
+                        let x = config.left !== undefined ? config.left : diameter - config.right - width;
+                        let y = config.top !== undefined ? config.top : diameter - config.bottom - height;
+                        const pattern = this._makeTrianglifyPattern(width, height);
+                        ctx.drawImage(pattern, x, y, width, height);
+                        ctx.strokeStyle = `rgba(0, 0, 255, 0.5)`;
+                        ctx.lineWidth = 1 * this.sizeScale;
+                        ctx.beginPath();
+                        ctx.arc(x + width / 2, y + height / 2, width / 2, 0, 2 * Math.PI);
+                        ctx.stroke();
+                    }
+                } else if (this.mode === 'DotToShape') {
+                    for (let i = 0; i < this.elementsData.length; i++) {
+                        const data = this.elementsData[i];
+                        const color = this.palette[data.colorIdx];
+                        ctx.fillStyle = `rgba(${color.join(',')})`;
+                        const x = cx + data.r * radius * Math.cos(data.theta);
+                        const y = cy + data.r * radius * Math.sin(data.theta);
+                        const shapeFactor = random();
+                        const size = data.size_dot * (1 - shapeFactor) + data.size_sq * shapeFactor;
+                        const cornerRadius = size * (1 - shapeFactor);
+                        ctx.beginPath();
+                        ctx.moveTo(x - size + cornerRadius, y - size);
+                        ctx.lineTo(x + size - cornerRadius, y - size);
+                        ctx.arcTo(x + size, y - size, x + size, y - size + cornerRadius, cornerRadius);
+                        ctx.lineTo(x + size, y + size - cornerRadius);
+                        ctx.arcTo(x + size, y + size, x + size - cornerRadius, y + size, cornerRadius);
+                        ctx.lineTo(x - size + cornerRadius, y + size);
+                        ctx.arcTo(x - size, y + size, x - size, y + size - cornerRadius, cornerRadius);
+                        ctx.lineTo(x - size, y - size + cornerRadius);
+                        ctx.arcTo(x - size, y - size, x - size + cornerRadius, y - size, cornerRadius);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                } else if (this.mode === 'DotsToMixed') {
+                    for (let i = 0; i < this.elementsData.length; i++) {
+                        const data = this.elementsData[i];
+                        const color = this.palette[data.colorIdx];
+                        ctx.fillStyle = `rgba(${color.join(',')})`;
+                        ctx.strokeStyle = `rgba(${color.join(',')})`;
+                        const x = cx + data.r * radius * Math.cos(data.theta);
+                        const y = cy + data.r * radius * Math.sin(data.theta);
+                        const shapeFactor = random();
+                        if (shapeFactor < 0.5) {
+                            ctx.beginPath();
+                            ctx.arc(x, y, data.size_dot * (1 - shapeFactor * 2), 0, 2 * Math.PI);
+                            ctx.fill();
+                        } else {
+                            if (data.type === 'Lines') {
+                                const x1 = cx + data.r1 * radius * Math.cos(data.theta1);
+                                const y1 = cy + data.r1 * radius * Math.sin(data.theta1);
+                                const x2 = cx + data.r2 * radius * Math.cos(data.theta2);
+                                const y2 = cy + data.r2 * radius * Math.sin(data.theta2);
+                                ctx.lineWidth = data.lineWidth * (shapeFactor * 2 - 1);
+                                ctx.beginPath();
+                                ctx.moveTo(x1, y1);
+                                ctx.lineTo(x2, y2);
+                                ctx.stroke();
+                            } else if (data.type === 'Dots') {
+                                ctx.beginPath();
+                                ctx.arc(x, y, data.size_dot * (shapeFactor * 2 - 1), 0, 2 * Math.PI);
+                                ctx.fill();
+                            } else {
+                                const size_sq = data.size_sq * (shapeFactor * 2 - 1);
+                                ctx.fillRect(x - size_sq, y - size_sq, size_sq * 2, size_sq * 2);
+                            }
+                        }
+                    }
+                } else if (this.mode === 'Organic') {
+                    for (let i = 0; i < this.elementsData.length; i++) {
+                        const data = this.elementsData[i];
+                        const color = this.palette[data.colorIdx];
+                        ctx.fillStyle = `rgba(${color.join(',')})`;
+                        ctx.strokeStyle = `rgba(${color.join(',')})`;
+                        if (data.type === 'Lines') {
+                            const x1 = cx + data.r1 * radius * Math.cos(data.theta1);
+                            const y1 = cy + data.r1 * radius * Math.sin(data.theta1);
+                            const x2 = cx + data.r2 * radius * Math.cos(data.theta2);
+                            const y2 = cy + data.r2 * radius * Math.sin(data.theta2);
+                            ctx.lineWidth = data.lineWidth;
+                            ctx.beginPath();
+                            ctx.moveTo(x1, y1);
+                            ctx.quadraticCurveTo(cx, cy, x2, y2);
+                            ctx.stroke();
+                        } else if (data.type === 'Dots') {
+                            const x = cx + data.r * radius * Math.cos(data.theta);
+                            const y = cy + data.r * radius * Math.sin(data.theta);
+                            ctx.beginPath();
+                            ctx.arc(x, y, data.size_dot, 0, 2 * Math.PI);
+                            ctx.fill();
+                        } else {
+                            const x = cx + data.r * radius * Math.cos(data.theta);
+                            const y = cy + data.r * radius * Math.sin(data.theta);
+                            const size = data.size_sq;
+                            drawShape(ctx, data.shapeType, x, y, size, data.rotation, color);
+                        }
+                    }
+                }
+                const full = document.createElement('canvas');
+                full.width = this.tile_size;
+                full.height = this.tile_size;
+                const fullCtx = full.getContext('2d');
+                fullCtx.fillStyle = `rgba(${backgroundColor[0]}, ${backgroundColor[1]}, ${backgroundColor[2]}, ${backgroundColor[3]})`;
+                fullCtx.fillRect(0, 0, this.tile_size, this.tile_size);
+                for (let i = 0; i < this.sectors; i++) {
+                    fullCtx.save();
+                    fullCtx.translate(cx, cy);
+                    fullCtx.rotate((angle * i + rotationOffset) * Math.PI / 180);
+                    if (i % 2 === 1) {
+                        fullCtx.scale(-1, 1);
+                    }
+                    fullCtx.drawImage(canvas, -cx, -cy);
+                    fullCtx.restore();
+                }
+                return full;
+            }
+            drawSierpinski(ctx, x, y, size, level) {
+                if (level === 0 || size < 1 * this.sizeScale) {
+                    return;
+                }
+                const third = Math.floor(size / 3);
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        if (i === 1 && j === 1) continue;
+                        const colorIdx = (i + j * 3 + level) % this.palette.length;
+                        const color = this.palette[colorIdx];
+                        ctx.fillStyle = `rgba(${color.join(',')})`;
+                        ctx.fillRect(x + i * third, y + j * third, third, third);
+                        this.drawSierpinski(ctx, x + i * third, y + j * third, third, level - 1);
+                    }
+                }
+            }
+        }
+        let palette = loadPalette();
+        let currentImage = null;
+        let currentSeed = 0;
+        function loadPalette() {
+            const saved = localStorage.getItem('palette');
+            if (saved) {
+                try {
+                    const json = JSON.parse(saved);
+                    if (Object.keys(json).every(k => Array.isArray(json[k]) && json[k].length === 4 && json[k].slice(0, 3).every(c => Number.isInteger(c) && c >= 0 && c <= 255) && json[k][3] >= 0 && json[k][3] <= 1)) {
+                        return json;
+                    }
+                } catch (e) {
+                    console.error('Error parsing saved palette:', e);
+                }
+            }
+            return DEFAULT_PALETTE;
+        }
+        function loadBackgroundColor() {
+            const saved = localStorage.getItem('backgroundColor');
+            if (saved) {
+                try {
+                    const color = JSON.parse(saved);
+                    if (Array.isArray(color) && color.length === 4 && color.slice(0, 3).every(c => Number.isInteger(c) && c >= 0 && c <= 255) && color[3] >= 0 && color[3] <= 1) {
+                        backgroundColor = color;
+                    }
+                } catch (e) {
+                    console.error('Error parsing saved background color:', e);
+                }
+            }
+        }
+        function savePalette() {
+            localStorage.setItem('palette', JSON.stringify(palette));
+        }
+        function updatePaletteTable() {
+            const tbody = document.querySelector('#paletteTable tbody');
+            tbody.innerHTML = '';
+            Object.entries(palette).forEach(([key, color], index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="border-b p-3 text-center text-gray-700">${key}</td>
+                    <td class="border-b p-3">
+                        <button class="color-btn" style="background-color: rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]});" title="Изменить цвет"></button>
+                    </td>
+                    <td class="border-b p-3">
+                        <button class="delete-btn" title="Удалить цвет">Удалить</button>
+                    </td>
+                `;
+                row.querySelector('.color-btn').addEventListener('click', () => changeColor(index));
+                row.querySelector('.delete-btn').addEventListener('click', () => removeSpecificColor(key));
+                tbody.appendChild(row);
+            });
+        }
+        function addColor() {
+            if (Object.keys(palette).length >= 20) {
+                alert('Максимум 20 цветов!');
+                return;
+            }
+            const newKey = (Object.keys(palette).length + 1).toString();
+            palette[newKey] = AVAILABLE_COLORS[colorIndex % AVAILABLE_COLORS.length];
+            colorIndex++;
+            updatePaletteTable();
+            savePalette();
+        }
+        function removeColor() {
+            if (Object.keys(palette).length <= 1) {
+                alert('Минимум 1 цвет!');
+                return;
+            }
+            const keys = Object.keys(palette);
+            delete palette[keys[keys.length - 1]];
+            updatePaletteTable();
+            savePalette();
+        }
+        function removeSpecificColor(key) {
+            if (Object.keys(palette).length <= 1) {
+                alert('Минимум 1 цвет!');
+                return;
+            }
+            delete palette[key];
+            const newPalette = {};
+            Object.values(palette).forEach((color, index) => {
+                newPalette[(index + 1).toString()] = color;
+            });
+            palette = newPalette;
+            updatePaletteTable();
+            savePalette();
+        }
+        function changeColor(row) {
+            const key = Object.keys(palette)[row];
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white p-6 rounded-lg max-w-sm w-full">
+                    <h3 class="text-lg font-semibold mb-4">Выбор цвета для ключа ${key}</h3>
+                    <input type="color" id="colorPicker" value="${rgbToHex(palette[key])}" class="w-full h-12 mb-4">
+                    <label class="block text-sm font-medium mb-1">Прозрачность: <span id="opacityValue">${palette[key][3]}</span></label>
+                    <input type="range" id="opacitySlider" min="0" max="1" step="0.01" value="${palette[key][3]}" class="w-full mb-4">
+                    <div class="flex justify-end gap-3">
+                        <button id="cancelBtn" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Отмена</button>
+                        <button id="saveColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Сохранить</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            document.getElementById('opacitySlider').addEventListener('input', (e) => {
+                document.getElementById('opacityValue').textContent = e.target.value;
+            });
+            document.getElementById('saveColorBtn').addEventListener('click', () => {
+                const color = hexToRgb(document.getElementById('colorPicker').value);
+                const opacity = parseFloat(document.getElementById('opacitySlider').value);
+                palette[key] = [...color, opacity];
+                updatePaletteTable();
+                savePalette();
+                document.body.removeChild(modal);
+            });
+            document.getElementById('cancelBtn').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+        }
+        function changeBackgroundColor() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white p-6 rounded-lg max-w-sm w-full">
+                    <h3 class="text-lg font-semibold mb-4">Выбор цвета фона</h3>
+                    <input type="color" id="backgroundColorPicker" value="${rgbToHex(backgroundColor)}" class="w-full h-12 mb-4">
+                    <label class="block text-sm font-medium mb-1">Прозрачность: <span id="backgroundOpacityValue">${backgroundColor[3]}</span></label>
+                    <input type="range" id="backgroundOpacitySlider" min="0" max="1" step="0.01" value="${backgroundColor[3]}" class="w-full mb-4">
+                    <div class="flex justify-end gap-3">
+                        <button id="cancelBackgroundBtn" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Отмена</button>
+                        <button id="saveBackgroundColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Сохранить</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            document.getElementById('backgroundOpacitySlider').addEventListener('input', (e) => {
+                document.getElementById('backgroundOpacityValue').textContent = e.target.value;
+            });
+            document.getElementById('saveBackgroundColorBtn').addEventListener('click', () => {
+                const color = hexToRgb(document.getElementById('backgroundColorPicker').value);
+                const opacity = parseFloat(document.getElementById('backgroundOpacitySlider').value);
+                backgroundColor = [...color, opacity];
+                localStorage.setItem('backgroundColor', JSON.stringify(backgroundColor));
+                document.body.removeChild(modal);
+                generate();
+            });
+            document.getElementById('cancelBackgroundBtn').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+        }
+        function rgbToHex([r, g, b]) {
+            return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
+        }
+        function hexToRgb(hex) {
+            const bigint = parseInt(hex.slice(1), 16);
+            return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
+        }
+        function rectsIntersect(r1, r2) {
+            return !(r2.x > r1.x + r1.w ||
+                     r2.x + r2.w < r1.x ||
+                     r2.y > r1.y + r1.h ||
+                     r2.y + r2.h < r1.y);
+        }
+        function drawBackgroundDecorations(ctx, w, h, mode, palette, prng, scale = 1) {
+            const random = prng.random.bind(prng);
+            const colors = Object.values(palette);
+            const shapeTypes = ['square', 'circle', 'triangle', 'diamond', 'star', 'flower', 'bird', 'boteh'];
+            const numDeco = Math.floor((w / scale * h / scale / 10000) * 10); // Adjusted for constant density
+            switch (mode) {
+                case 'Lines':
+                    ctx.lineWidth = 1 * scale;
+                    for (let i = 0; i < numDeco; i++) {
+                        const color = colors[Math.floor(random() * colors.length)];
+                        ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.3)`;
+                        const x1 = random() * w;
+                        const y1 = random() * h;
+                        const x2 = x1 + (random() - 0.5) * w * 0.5;
+                        const y2 = y1 + (random() - 0.5) * h * 0.5;
+                        const cp1x = x1 + (random() - 0.5) * w * 0.2;
+                        const cp1y = y1 + (random() - 0.5) * h * 0.2;
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y1);
+                        ctx.quadraticCurveTo(cp1x, cp1y, x2, y2);
+                        ctx.stroke();
+                    }
+                    break;
+                case 'Dots':
+                    for (let i = 0; i < numDeco * 2; i++) {
+                        const color = colors[Math.floor(random() * colors.length)];
+                        ctx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.4)`;
+                        const x = random() * w;
+                        const y = random() * h;
+                        const size = (random() * 5 + 2) * scale;
+                        ctx.beginPath();
+                        ctx.arc(x, y, size, 0, 2 * Math.PI);
+                        ctx.fill();
+                    }
+                    break;
+                case 'Shapes':
+                    for (let i = 0; i < numDeco; i++) {
+                        const color = colors[Math.floor(random() * colors.length)];
+                        const x = random() * w;
+                        const y = random() * h;
+                        const size = (random() * 10 + 5) * scale;
+                        const shapeType = shapeTypes[Math.floor(random() * shapeTypes.length)];
+                        const rotation = random() * 2 * Math.PI;
+                        drawShape(ctx, shapeType, x, y, size, rotation, [color[0], color[1], color[2], 0.3]);
+                    }
+                    break;
+                case 'Mixed':
+                    drawBackgroundDecorations(ctx, w, h, 'Lines', palette, prng, scale);
+                    drawBackgroundDecorations(ctx, w, h, 'Dots', palette, prng, scale);
+                    drawBackgroundDecorations(ctx, w, h, 'Shapes', palette, prng, scale);
+                    break;
+                case 'Spiral':
+                    for (let i = 0; i < Math.floor(numDeco / 10); i++) {
+                        const cx = random() * w;
+                        const cy = random() * h;
+                        const colorIdx = Math.floor(random() * colors.length);
+                        const color = colors[colorIdx];
+                        ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.4)`;
+                        ctx.lineWidth = 2 * scale;
+                        ctx.beginPath();
+                        let r = 0, theta = 0;
+                        for (let j = 0; j < 200; j++) {
+                            r += 0.5 * scale;
+                            theta += 0.1;
+                            const x = cx + r * Math.cos(theta);
+                            const y = cy + r * Math.sin(theta);
+                            if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                        }
+                        ctx.stroke();
+                    }
+                    break;
+                case 'Orbit':
+                    for (let i = 0; i < numDeco; i++) {
+                        const color = colors[Math.floor(random() * colors.length)];
+                        const x = random() * w;
+                        const y = random() * h;
+                        const size = (random() * 20 + 10) * scale;
+                        ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.3)`;
+                        ctx.lineWidth = 1 * scale;
+                        ctx.beginPath();
+                        ctx.arc(x, y, size, 0, 2 * Math.PI);
+                        ctx.stroke();
+                    }
+                    break;
+                case 'DotToShape':
+                    drawBackgroundDecorations(ctx, w, h, 'Dots', palette, prng, scale);
+                    drawBackgroundDecorations(ctx, w, h, 'Shapes', palette, prng, scale);
+                    break;
+                case 'DotsToMixed':
+                    drawBackgroundDecorations(ctx, w, h, 'Dots', palette, prng, scale);
+                    drawBackgroundDecorations(ctx, w, h, 'Mixed', palette, prng, scale);
+                    break;
+                case 'Carpet':
+                    const cellSize = 50 * scale;
+                    for (let ix = 0; ix < w; ix += cellSize) {
+                        for (let jy = 0; jy < h; jy += cellSize) {
+                            const color = colors[Math.floor(random() * colors.length)];
+                            ctx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.2)`;
+                            ctx.fillRect(ix, jy, cellSize, cellSize);
+                            ctx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.3)`;
+                            ctx.fillRect(ix + cellSize / 3, jy + cellSize / 3, cellSize / 3, cellSize / 3);
+                        }
+                    }
+                    break;
+                case 'Organic':
+                    drawBackgroundDecorations(ctx, w, h, 'Lines', palette, prng, scale);
+                    drawBackgroundDecorations(ctx, w, h, 'Shapes', palette, prng, scale);
+                    break;
+            }
+        }
+        function createPatternCanvas(targetPxWidth, targetPxHeight, borderPx, tileWidth, tileHeight, mode, elements, slices, seed) {
+            const total_tiles = tileWidth * tileHeight;
+            if (total_tiles < 1) return null;
+            const prng = new PRNG(seed);
+            const random = prng.random.bind(prng);
+            const canvas = document.createElement('canvas');
+            canvas.width = targetPxWidth;
+            canvas.height = targetPxHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = `rgba(${backgroundColor.join(',')})`;
+            ctx.fillRect(0, 0, targetPxWidth, targetPxHeight);
+            const innerTargetWidth = targetPxWidth - 2 * borderPx;
+            const innerTargetHeight = targetPxHeight - 2 * borderPx;
+            const tilePx = Math.min(innerTargetWidth / tileWidth, innerTargetHeight / tileHeight);
+            const innerWidth = tilePx * tileWidth;
+            const innerHeight = tilePx * tileHeight;
+            const innerCanvas = document.createElement('canvas');
+            innerCanvas.width = innerWidth;
+            innerCanvas.height = innerHeight;
+            const innerCtx = innerCanvas.getContext('2d');
+            const decoScale = tilePx / PREVIEW_TILE_PX;
+            drawBackgroundDecorations(innerCtx, innerWidth, innerHeight, mode, palette, prng, decoScale);
+            const number_small = total_tiles - 1;
+            const central_size_ratio = Math.max(0.5, 0.8 - (number_small * 0.005));
+            const small_size_ratio = Math.max(0.15, 0.35 - (number_small * 0.005));
+            const central_size = Math.min(innerWidth, innerHeight) * central_size_ratio;
+            const central_x = (innerWidth - central_size) / 2;
+            const central_y = (innerHeight - central_size) / 2;
+            const gen = new KaleidoGenerator(central_size, palette, mode, slices, elements, slices, prng);
+            const tileCanvasCentral = document.createElement('canvas');
+            gen.generateTile(tileCanvasCentral);
+            innerCtx.drawImage(tileCanvasCentral, central_x, central_y, central_size, central_size);
+            const small_size = Math.min(innerWidth, innerHeight) * small_size_ratio;
+            let placed_rects = [{x: central_x, y: central_y, w: central_size, h: central_size}];
+            const center_x = innerWidth / 2;
+            const center_y = innerHeight / 2;
+            const base_count = Math.floor(number_small / 4);
+            for (let i = 0; i < base_count; i++) {
+                let attempts = 0;
+                let base_pos_x, base_pos_y;
+                do {
+                    base_pos_x = random() * (center_x - small_size);
+                    base_pos_y = random() * (center_y - small_size);
+                    const dx = (base_pos_x + small_size / 2) - center_x;
+                    const dy = (base_pos_y + small_size / 2) - center_y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const min_distance = central_size / 2 + small_size / 2 + small_size * 0.2;
+                    if (dist < min_distance) {
+                        attempts++;
+                        continue;
+                    }
+                    const base_rect = {x: base_pos_x, y: base_pos_y, w: small_size, h: small_size};
+                    const mirror_x_x = innerWidth - base_pos_x - small_size;
+                    const mirror_y_y = innerHeight - base_pos_y - small_size;
+                    const mirror_x_rect = {x: mirror_x_x, y: base_pos_y, w: small_size, h: small_size};
+                    const mirror_y_rect = {x: base_pos_x, y: mirror_y_y, w: small_size, h: small_size};
+                    const mirror_xy_rect = {x: mirror_x_x, y: mirror_y_y, w: small_size, h: small_size};
+                    const all_rects = [base_rect, mirror_x_rect, mirror_y_rect, mirror_xy_rect];
+                    let intersects = false;
+                    for (let new_rect of all_rects) {
+                        for (let rect of placed_rects) {
+                            if (rectsIntersect(rect, new_rect)) {
+                                intersects = true;
+                                break;
+                            }
+                        }
+                        if (intersects) break;
+                    }
+                    if (intersects) {
+                        attempts++;
+                        continue;
+                    }
+                    break;
+                } while (attempts < 200);
+                if (attempts < 200) {
+                    const genSmall = new KaleidoGenerator(small_size, palette, mode, slices, elements, slices, prng);
+                    const smallTile = document.createElement('canvas');
+                    genSmall.generateTile(smallTile);
+                    innerCtx.drawImage(smallTile, base_pos_x, base_pos_y, small_size, small_size);
+                    innerCtx.drawImage(smallTile, innerWidth - base_pos_x - small_size, base_pos_y, small_size, small_size);
+                    innerCtx.drawImage(smallTile, base_pos_x, innerHeight - base_pos_y - small_size, small_size, small_size);
+                    innerCtx.drawImage(smallTile, innerWidth - base_pos_x - small_size, innerHeight - base_pos_y - small_size, small_size, small_size);
+                    placed_rects.push({x: base_pos_x, y: base_pos_y, w: small_size, h: small_size});
+                    placed_rects.push({x: innerWidth - base_pos_x - small_size, y: base_pos_y, w: small_size, h: small_size});
+                    placed_rects.push({x: base_pos_x, y: innerHeight - base_pos_y - small_size, w: small_size, h: small_size});
+                    placed_rects.push({x: innerWidth - base_pos_x - small_size, y: innerHeight - base_pos_y - small_size, w: small_size, h: small_size});
+                }
+            }
+            const remainder = number_small % 4;
+            for (let i = 0; i < remainder; i++) {
+                const genSmall = new KaleidoGenerator(small_size, palette, mode, slices, elements, slices, prng);
+                const smallTile = document.createElement('canvas');
+                genSmall.generateTile(smallTile);
+                let attempts = 0;
+                let pos_x, pos_y;
+                do {
+                    const angle = random() * 2 * Math.PI;
+                    const min_distance = central_size / 2 + small_size / 2 + small_size * 0.2;
+                    const max_distance = Math.min(innerWidth, innerHeight) / 2 - small_size / 2;
+                    const distance = min_distance + random() * (max_distance - min_distance);
+                    pos_x = center_x + distance * Math.cos(angle) - small_size / 2;
+                    pos_y = center_y + distance * Math.sin(angle) - small_size / 2;
+                    if (pos_x < 0 || pos_x + small_size > innerWidth || pos_y < 0 || pos_y + small_size > innerHeight) {
+                        attempts++;
+                        continue;
+                    }
+                    const small_rect = {x: pos_x, y: pos_y, w: small_size, h: small_size};
+                    let intersects = false;
+                    for (let rect of placed_rects) {
+                        if (rectsIntersect(rect, small_rect)) {
+                            intersects = true;
+                            break;
+                        }
+                    }
+                    if (intersects) {
+                        attempts++;
+                        continue;
+                    }
+                    break;
+                } while (attempts < 200);
+                if (attempts < 200) {
+                    innerCtx.drawImage(smallTile, pos_x, pos_y, small_size, small_size);
+                    placed_rects.push({x: pos_x, y: pos_y, w: small_size, h: small_size});
+                }
+            }
+            const innerX = (targetPxWidth - innerWidth) / 2;
+            const innerY = (targetPxHeight - innerHeight) / 2;
+            ctx.drawImage(innerCanvas, innerX, innerY, innerWidth, innerHeight);
+            const borderShapeTypes = ['circle', 'flower', 'diamond', 'triangle', 'bird'];
+            const borderBgIdx = Math.floor(random() * Object.keys(palette).length);
+            const borderBg = Object.values(palette)[borderBgIdx];
+            ctx.fillStyle = `rgba(${borderBg.join(',')})`;
+            ctx.fillRect(0, 0, targetPxWidth, borderPx);
+            ctx.fillRect(0, targetPxHeight - borderPx, targetPxWidth, borderPx);
+            ctx.fillRect(0, borderPx, borderPx, targetPxHeight - 2 * borderPx);
+            ctx.fillRect(targetPxWidth - borderPx, borderPx, borderPx, targetPxHeight - 2 * borderPx);
+            for (let side = 0; side < 4; side++) {
+                let startX, startY, dx, dy, length, rotAdjust = 0;
+                if (side === 0) {
+                    startX = 0;
+                    startY = 0;
+                    dx = borderPx;
+                    dy = 0;
+                    length = targetPxWidth / borderPx;
+                } else if (side === 1) {
+                    startX = targetPxWidth - borderPx;
+                    startY = 0;
+                    dx = 0;
+                    dy = borderPx;
+                    length = targetPxHeight / borderPx;
+                    rotAdjust = Math.PI / 2;
+                } else if (side === 2) {
+                    startX = 0;
+                    startY = targetPxHeight - borderPx;
+                    dx = borderPx;
+                    dy = 0;
+                    length = targetPxWidth / borderPx;
+                    rotAdjust = Math.PI;
+                } else {
+                    startX = 0;
+                    startY = 0;
+                    dx = 0;
+                    dy = borderPx;
+                    length = targetPxHeight / borderPx;
+                    rotAdjust = -Math.PI / 2;
+                }
+                for (let i = 0; i < length; i++) {
+                    const px = startX + i * dx + borderPx / 2;
+                    const py = startY + i * dy + borderPx / 2;
+                    const type = borderShapeTypes[Math.floor(random() * borderShapeTypes.length)];
+                    const rot = random() * 2 * Math.PI + rotAdjust;
+                    const colIdx = Math.floor(random() * Object.keys(palette).length);
+                    const col = Object.values(palette)[colIdx];
+                    drawShape(ctx, type, px, py, borderPx / 3, rot, col);
+                }
+            }
+            return canvas;
+        }
+        function generate() {
+            const modeMap = {
+                'Линии': 'Lines',
+                'Точки': 'Dots',
+                'Фигуры': 'Shapes',
+                'Смешанный': 'Mixed',
+                'Спираль': 'Spiral',
+                'Орбиты': 'Orbit',
+                'Точки в Фигуры': 'DotToShape',
+                'Точки в Смешанный': 'DotsToMixed',
+                'Ковер': 'Carpet',
+                'Органический': 'Organic'
+            };
+            const mode = modeMap[document.getElementById('modeCombo').value];
+            const elements = parseInt(document.getElementById('elementSlider').value);
+            const slices = parseInt(document.getElementById('slicesSlider').value);
+            const tileWidth = parseInt(document.getElementById('tileWidthSlider').value);
+            const tileHeight = parseInt(document.getElementById('tileHeightSlider').value);
+            currentSeed = Math.random() * 1e9 | 0;
+            const targetPxWidth = PREVIEW_TILE_PX * tileWidth + 2 * PREVIEW_BORDER_PX;
+            const targetPxHeight = PREVIEW_TILE_PX * tileHeight + 2 * PREVIEW_BORDER_PX;
+            const patternCanvas = createPatternCanvas(targetPxWidth, targetPxHeight, PREVIEW_BORDER_PX, tileWidth, tileHeight, mode, elements, slices, currentSeed);
+            if (patternCanvas) {
+                const previewCanvas = document.getElementById('previewCanvas');
+                previewCanvas.width = patternCanvas.width;
+                previewCanvas.height = patternCanvas.height;
+                const previewCtx = previewCanvas.getContext('2d');
+                previewCtx.drawImage(patternCanvas, 0, 0);
+                currentImage = previewCanvas;
+            }
+        }
+        function openFullImage() {
+            if (!currentImage) {
+                alert('Сначала сгенерируйте паттерн!');
+                return;
+            }
+            const modeMap = {
+                'Линии': 'Lines',
+                'Точки': 'Dots',
+                'Фигуры': 'Shapes',
+                'Смешанный': 'Mixed',
+                'Спираль': 'Spiral',
+                'Орбиты': 'Orbit',
+                'Точки в Фигуры': 'DotToShape',
+                'Точки в Смешанный': 'DotsToMixed',
+                'Ковер': 'Carpet',
+                'Органический': 'Organic'
+            };
+            const mode = modeMap[document.getElementById('modeCombo').value];
+            const elements = parseInt(document.getElementById('elementSlider').value);
+            const slices = parseInt(document.getElementById('slicesSlider').value);
+            const tileWidth = parseInt(document.getElementById('tileWidthSlider').value);
+            const tileHeight = parseInt(document.getElementById('tileHeightSlider').value);
+            const widthCm = tileWidth * MAIN_CM + 2 * BORDER_CM;
+            const heightCm = tileHeight * MAIN_CM + 2 * BORDER_CM;
+            const targetPxWidth = widthCm * CM_TO_INCH * DPI;
+            const targetPxHeight = heightCm * CM_TO_INCH * DPI;
+            const borderPx = BORDER_CM * CM_TO_INCH * DPI;
+            const patternCanvas = createPatternCanvas(targetPxWidth, targetPxHeight, borderPx, tileWidth, tileHeight, mode, elements, slices, currentSeed);
+            if (patternCanvas) {
+                const fullCanvas = document.getElementById('fullCanvas');
+                fullCanvas.width = patternCanvas.width;
+                fullCanvas.height = patternCanvas.height;
+                const fullCtx = fullCanvas.getContext('2d');
+                fullCtx.drawImage(patternCanvas, 0, 0);
+                document.getElementById('imageModal').classList.add('show');
+            }
+        }
+        function save() {
+            if (!currentImage) {
+                alert('Сначала сгенерируйте паттерн!');
+                return;
+            }
+            const modeMap = {
+                'Линии': 'Lines',
+                'Точки': 'Dots',
+                'Фигуры': 'Shapes',
+                'Смешанный': 'Mixed',
+                'Спираль': 'Spiral',
+                'Орбиты': 'Orbit',
+                'Точки в Фигуры': 'DotToShape',
+                'Точки в Смешанный': 'DotsToMixed',
+                'Ковер': 'Carpet',
+                'Органический': 'Organic'
+            };
+            const mode = modeMap[document.getElementById('modeCombo').value];
+            const elements = parseInt(document.getElementById('elementSlider').value);
+            const slices = parseInt(document.getElementById('slicesSlider').value);
+            const tileWidth = parseInt(document.getElementById('tileWidthSlider').value);
+            const tileHeight = parseInt(document.getElementById('tileHeightSlider').value);
+            const widthCm = tileWidth * MAIN_CM + 2 * BORDER_CM;
+            const heightCm = tileHeight * MAIN_CM + 2 * BORDER_CM;
+            const targetPxWidth = widthCm * CM_TO_INCH * DPI;
+            const targetPxHeight = heightCm * CM_TO_INCH * DPI;
+            const borderPx = BORDER_CM * CM_TO_INCH * DPI;
+            const patternCanvas = createPatternCanvas(targetPxWidth, targetPxHeight, borderPx, tileWidth, tileHeight, mode, elements, slices, currentSeed);
+            if (patternCanvas) {
+                const link = document.createElement('a');
+                link.download = 'ковер_паттерн.png';
+                link.href = patternCanvas.toDataURL('image/png');
+                link.click();
+            }
+        }
+        function generatePdf() {
+            const paperSize = document.getElementById('paperSize').value;
+            let widthCm, heightCm, orient;
+            if (paperSize === 'custom') {
+                widthCm = parseFloat(document.getElementById('customWidth').value);
+                heightCm = parseFloat(document.getElementById('customHeight').value);
+                orient = heightCm > widthCm ? 'portrait' : 'landscape';
+            } else {
+                const sizes = {
+                    'a4-portrait': {w: 21, h: 29.7, o: 'portrait'},
+                    'a4-landscape': {w: 29.7, h: 21, o: 'landscape'},
+                    'a3-portrait': {w: 29.7, h: 42, o: 'portrait'},
+                    'a3-landscape': {w: 42, h: 29.7, o: 'landscape'},
+                };
+                const s = sizes[paperSize];
+                widthCm = s.w;
+                heightCm = s.h;
+                orient = s.o;
+            }
+            document.getElementById('pdfModal').classList.remove('show');
+            const modeMap = {
+                'Линии': 'Lines',
+                'Точки': 'Dots',
+                'Фигуры': 'Shapes',
+                'Смешанный': 'Mixed',
+                'Спираль': 'Spiral',
+                'Орбиты': 'Orbit',
+                'Точки в Фигуры': 'DotToShape',
+                'Точки в Смешанный': 'DotsToMixed',
+                'Ковер': 'Carpet',
+                'Органический': 'Organic'
+            };
+            const mode = modeMap[document.getElementById('modeCombo').value];
+            const elements = parseInt(document.getElementById('elementSlider').value);
+            const slices = parseInt(document.getElementById('slicesSlider').value);
+            let effectiveTileWidth = parseInt(document.getElementById('tileWidthSlider').value);
+            let effectiveTileHeight = parseInt(document.getElementById('tileHeightSlider').value);
+            if (heightCm > widthCm && effectiveTileWidth > effectiveTileHeight) {
+                [effectiveTileWidth, effectiveTileHeight] = [effectiveTileHeight, effectiveTileWidth];
+            } else if (heightCm < widthCm && effectiveTileWidth < effectiveTileHeight) {
+                [effectiveTileWidth, effectiveTileHeight] = [effectiveTileHeight, effectiveTileWidth];
+            }
+            const targetPxWidth = Math.round(widthCm * CM_TO_INCH * DPI);
+            const targetPxHeight = Math.round(heightCm * CM_TO_INCH * DPI);
+            const borderPx = Math.round(BORDER_CM * CM_TO_INCH * DPI);
+            const patternCanvas = createPatternCanvas(targetPxWidth, targetPxHeight, borderPx, effectiveTileWidth, effectiveTileHeight, mode, elements, slices, currentSeed);
+            if (patternCanvas) {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({
+                    orientation: orient,
+                    unit: 'cm',
+                    format: [widthCm, heightCm]
+                });
+                doc.addImage(patternCanvas.toDataURL('image/png'), 'PNG', 0, 0, widthCm, heightCm, '', 'NONE');
+                doc.save('ковер_паттерн.pdf');
+            }
+        }
+        document.getElementById('elementSlider').addEventListener('input', (e) => {
+            document.getElementById('elementValue').textContent = e.target.value;
+        });
+        document.getElementById('slicesSlider').addEventListener('input', (e) => {
+            document.getElementById('slicesValue').textContent = e.target.value;
+        });
+        document.getElementById('tileWidthSlider').addEventListener('input', (e) => {
+            document.getElementById('tileWidthValue').textContent = e.target.value;
+        });
+        document.getElementById('tileHeightSlider').addEventListener('input', (e) => {
+            document.getElementById('tileHeightValue').textContent = e.target.value;
+        });
+        document.getElementById('addColorBtn').addEventListener('click', addColor);
+        document.getElementById('removeColorBtn').addEventListener('click', removeColor);
+        document.getElementById('generateBtn').addEventListener('click', generate);
+        document.getElementById('viewBtn').addEventListener('click', openFullImage);
+        document.getElementById('saveBtn').addEventListener('click', save);
+        document.getElementById('savePdfBtn').addEventListener('click', () => {
+            if (!currentImage) {
+                alert('Сначала сгенерируйте паттерн!');
+                return;
+            }
+            document.getElementById('pdfModal').classList.add('show');
+        });
+        document.getElementById('closeModalBtn').addEventListener('click', () => {
+            document.getElementById('imageModal').classList.remove('show');
+        });
+        document.getElementById('closePdfModalBtn').addEventListener('click', () => {
+            document.getElementById('pdfModal').classList.remove('show');
+        });
+        document.getElementById('paperSize').addEventListener('change', (e) => {
+            document.getElementById('customSizeDiv').classList.toggle('hidden', e.target.value !== 'custom');
+        });
+        document.getElementById('generatePdfBtn').addEventListener('click', generatePdf);
+        document.getElementById('home').addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+        document.getElementById('changeBackgroundColorBtn').addEventListener('click', changeBackgroundColor);
+        updatePaletteTable();
+        loadBackgroundColor();
+    </script>
+</body>
+</html>

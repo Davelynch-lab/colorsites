@@ -154,9 +154,10 @@
                                 <option>Орбиты</option>
                                 <option>Точки в Фигуры</option>
                                 <option>Точки в Смешанный</option>
-                                <option value="Crystal">Кристаллическое (избранное)</option>
-                                <option value="Sphere">3Д СФЕРА (избранное)</option>
-                                <option value="Kovrov">Ковер (избранное)</option>
+                                <option value="Crystal">Кристаллическое ⭐️</option>
+                                <option value="Sphere">3Д СФЕРА ⭐️</option>
+                                <option value="Kovrov">Ковер ⭐️</option>
+                                <option value="Mosaic">Мозаика ⭐️</option>
                             </select>
                         </div>
                         <div>
@@ -1284,9 +1285,11 @@ document.getElementById('modeCombo').addEventListener('change', () => {
     if (selectedValue === 'Crystal') {
         window.location.href = 'kalei.html';
     } else if (selectedValue === 'Sphere') {
-        window.location.href = 'test.html';
+        window.location.href = 'Sphere.html';
     } else if (selectedValue === 'Kovrov') {
         window.location.href = 'kovrov.html';
+    } else if (selectedValue === 'Mosaic') {
+        window.location.href = 'Mosaic.html';
     } else {
         stopAnimation();
         stopFullAnimation();

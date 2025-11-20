@@ -52,11 +52,11 @@
             transition: transform 0.3s, box-shadow 0.3s;
         }
         #backgroundColorPreview {
-    width: 100%;
-    height: 36px;
-    border: 2px solid #e5e7eb;
-    border-radius: 6px;
-}
+            width: 100%;
+            height: 36px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+        }
         .card:hover {
             transform: translateY(-4px);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
@@ -116,6 +116,11 @@
             padding: 0.75rem;
             font-size: 0.9rem;
         }
+        /* Styles for image upload preview */
+        #sourceImageContainer img {
+            border: 3px solid #7c3aed;
+            transition: all 0.3s ease;
+        }
     </style>
 </head>
 <body class="font-sans text-gray-900">
@@ -124,15 +129,11 @@
             <summary>Инструкции</summary>
             <p>Добро пожаловать в Генератор калейдоскопов! Следуйте этим шагам:</p>
             <ul class="list-disc pl-5 mt-2">
-                <li><strong>Выбор узора:</strong> Выберите тип узора (Линии, Точки, Фигуры, Смешанный, Ветви, Спираль, Орбиты, Точки в Фигуры).</li>
-                <li><strong>Настройка параметров:</strong> Регулируйте количество элементов (100–1000), секторов (3–40) и скорость анимации (0.05–0.5).</li>
-                <li><strong>Палитра:</strong> Добавляйте до 20 цветов, удаляйте или изменяйте их.</li>
+                <li><strong>Выбор узора:</strong> Выберите тип узора (Линии, Точки, Фигуры и др.).</li>
+                <li><strong>Палитра из фото:</strong> Загрузите картину (например, Ван Гога), чтобы автоматически создать палитру из 7-9 цветов.</li>
+                <li><strong>Настройка параметров:</strong> Регулируйте количество элементов, секторов и скорость.</li>
                 <li><strong>Генерация:</strong> Нажмите "Сгенерировать" для создания узора.</li>
-                <li><strong>Анимация:</strong> Нажмите "Анимировать" для запуска плавной анимации. Повторное нажатие останавливает.</li>
-                <li><strong>Запись видео:</strong> Нажмите "Старт/Стоп запись" для записи анимации. Нажмите "Скачать видео" для сохранения в MP4.</li>
-                <li><strong>Просмотр:</strong> Нажмите "Открыть полное изображение" для просмотра анимированного узора.</li>
-                <li><strong>Сохранение:</strong> Нажмите "Сохранить изображение" для скачивания PNG (статичное изображение).</li>
-                <li><strong>Возврат:</strong> Нажмите "← Вернуться" для возврата на главную.</li>
+                <li><strong>Анимация и запись:</strong> Создавайте живые узоры и сохраняйте видео.</li>
             </ul>
         </details>
         <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-white mb-8 drop-shadow-lg">Генератор калейдоскопов</h1>
@@ -144,37 +145,43 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium mb-1 text-gray-700">Тип узора</label>
-                            <select id="modeCombo" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500" title="Выберите тип узора">
+                            <select id="modeCombo" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500">
                                 <option>Линии</option>
                                 <option>Точки</option>
                                 <option>Фигуры</option>
                                 <option>Смешанный</option>
-                                <!-- <option>Ветви</option> -->
                                 <option>Спираль</option>
                                 <option>Орбиты</option>
                                 <option>Точки в Фигуры</option>
                                 <option>Точки в Смешанный</option>
-                                <option value="Crystal"><a href="kalei.html">Кристаллическое (избранное)</a></option>
-                                <option value="Sphere"><a href="test.html">3Д СФЕРА (избранное)</a></option>
-                                <option value="Kovrov"><a href="kovrov.html">Ковер (избранное)</a></option>
+                                <option value="Crystal">Кристаллическое (избранное)</option>
+                                <option value="Sphere">3Д СФЕРА (избранное)</option>
+                                <option value="Kovrov">Ковер (избранное)</option>
                             </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1 text-gray-700">Количество элементов: <span id="elementValue" class="font-bold">300</span></label>
-                            <input type="range" id="elementSlider" min="100" max="1000" value="300" class="w-full custom-range" title="Количество элементов">
+                            <input type="range" id="elementSlider" min="100" max="1000" value="300" class="w-full custom-range">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1 text-gray-700">Количество секторов: <span id="slicesValue" class="font-bold">13</span></label>
-                            <input type="range" id="slicesSlider" min="3" max="40" value="13" class="w-full custom-range" title="Количество секторов">
+                            <input type="range" id="slicesSlider" min="3" max="40" value="13" class="w-full custom-range">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1 text-gray-700">Скорость анимации: <span id="animationSpeedValue" class="font-bold">0.1</span></label>
-                            <input type="range" id="animationSpeedSlider" min="0.05" max="0.5" step="0.01" value="0.1" class="w-full custom-range" title="Скорость анимации">
+                            <input type="range" id="animationSpeedSlider" min="0.05" max="0.5" step="0.01" value="0.1" class="w-full custom-range">
                         </div>
                     </div>
                 </div>
                 <div class="card p-6 rounded-xl shadow-lg">
                     <h2 class="text-xl font-semibold mb-4 text-indigo-700">Палитра цветов</h2>
+                    
+                    <div class="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                        <label class="block text-sm font-bold mb-2 text-indigo-900">🎨 Создать палитру из картины</label>
+                        <p class="text-xs text-gray-600 mb-3">Загрузите фото (например, "Подсолнухи"), и мы извлечем 7-9 главных цветов.</p>
+                        <input type="file" id="imageInput" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer">
+                    </div>
+
                     <div class="overflow-x-auto">
                         <table id="paletteTable" class="w-full border-collapse mb-4">
                             <thead>
@@ -192,14 +199,19 @@
                         <button id="removeColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors" title="Удалить последний цвет">Удалить последний</button>
                         <button id="changeBackgroundColorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors" title="Изменить цвет фона">Выбрать цвет фона</button>
                     </div>
-
                 </div>
             </div>
             <div class="space-y-6">
-                <div class="card p-6 rounded-xl shadow-lg flex justify-center items-center">
-                    <div>
-                        <h2 class="text-xl font-semibold mb-4 text-indigo-700 text-center">Предпросмотр</h2>
-                        <canvas id="previewCanvas" class="mx-auto"></canvas>
+                <div class="card p-6 rounded-xl shadow-lg flex flex-col justify-center items-center">
+                    
+                    <div id="sourceImageContainer" class="hidden w-full mb-6 text-center relative">
+                        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-indigo-600 text-white text-xs px-2 py-1 rounded-full shadow">Исходное фото</div>
+                        <img id="sourceImagePreview" class="max-h-40 mx-auto rounded-lg shadow-md object-contain bg-gray-100">
+                    </div>
+
+                    <div class="w-full">
+                        <h2 class="text-xl font-semibold mb-4 text-indigo-700 text-center">Калейдоскоп</h2>
+                        <canvas id="previewCanvas" class="mx-auto shadow-inner"></canvas>
                     </div>
                 </div>
                 <div class="card p-6 rounded-xl shadow-lg">
@@ -211,6 +223,7 @@
                         <button id="viewBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Открыть узор">Открыть полное изображение</button>
                         <button id="saveBtn" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" title="Сохранить узор">Сохранить изображение</button>
                     </div>
+                    <div id="recordTimer" class="text-center mt-2 text-gray-600 font-mono text-sm">Запись: 00:00</div>
                 </div>
             </div>
         </div>
@@ -234,7 +247,7 @@ const CANVAS_PX = MAIN_PX;
 const MOBILE_RECORDING_PX = 1280;
 const MAX_RECORDING_DURATION = 60;
 let ANIMATION_SPEED = 0.1;
-let backgroundColor = [255, 255, 255, 1]; // По умолчанию белый цвет фона
+let backgroundColor = [255, 255, 255, 1]; 
 
 const DEFAULT_PALETTE = {
     '1': [245, 245, 220, 1],
@@ -671,29 +684,6 @@ class KaleidoGenerator {
         }
         return full;
     }
-
-    _drawShape(x, y, angle, size, ctx, points, t) {
-        this._drawBranch(x, y, angle, size, 1, ctx, points, t);
-        this._drawBranch(x, y, angle, size, -1, ctx, points, t);
-    }
-
-    _drawBranch(x, y, angle, size, direction, ctx, points, t) {
-        const s = this.branch_settings;
-        const new_angle = angle + (s.angle * direction + s.offset) + Math.sin(t) * 0.3;
-        const new_size = size * s.scale * (1 + Math.sin(t) * 0.2);
-        const x2 = x + Math.cos(new_angle) * new_size;
-        const y2 = y + Math.sin(new_angle) * new_size;
-        const color = this.palette[Math.floor(Math.random() * this.palette.length)];
-        const nextColor = this.palette[(Math.floor(Math.random() * this.palette.length) + 1) % this.palette.length];
-        const colorFactor = (Math.sin(t) + 1) / 2;
-        ctx.strokeStyle = `rgba(${this._interpolateColor(color, nextColor, colorFactor).join(',')})`;
-        ctx.lineWidth = 2 * (1 + Math.sin(t) * 0.8);
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
-        points.push({ x: x2, y: y2, angle: new_angle, size: new_size });
-    }
 }
 
 let palette = loadPalette();
@@ -917,6 +907,113 @@ function resetRecordTimer() {
         recordTimerId = null;
     }
 }
+
+// --------- NEW: Image Color Extraction Logic ---------
+
+document.getElementById('imageInput').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            // Show preview
+            const previewContainer = document.getElementById('sourceImageContainer');
+            const previewImg = document.getElementById('sourceImagePreview');
+            previewImg.src = img.src;
+            previewContainer.classList.remove('hidden');
+
+            // Extract colors
+            const extractedPalette = extractPaletteFromImage(img, 9); // Extract up to 9 colors
+            applyExtractedPalette(extractedPalette);
+            generate(); // Auto-generate after loading
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+function extractPaletteFromImage(image, maxColors) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Scale down for performance (max 100px)
+    const scale = Math.min(1, 100 / Math.max(image.width, image.height));
+    canvas.width = image.width * scale;
+    canvas.height = image.height * scale;
+    
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    const colorCounts = {};
+    const quantization = 24; // Combine similar colors
+
+    for (let i = 0; i < imageData.length; i += 4) {
+        const r = Math.floor(imageData[i] / quantization) * quantization;
+        const g = Math.floor(imageData[i + 1] / quantization) * quantization;
+        const b = Math.floor(imageData[i + 2] / quantization) * quantization;
+        const a = imageData[i + 3];
+
+        // Skip transparent or very white/black pixels (optional filter for better vibrancy)
+        if (a < 128) continue;
+        
+        const key = `${r},${g},${b}`;
+        colorCounts[key] = (colorCounts[key] || 0) + 1;
+    }
+
+    // Sort by frequency
+    const sortedColors = Object.keys(colorCounts).sort((a, b) => colorCounts[b] - colorCounts[a]);
+    
+    // Select distinct colors
+    const distinctColors = [];
+    const minDistance = 60; // Minimum distance between colors to be considered distinct
+
+    for (const colorStr of sortedColors) {
+        if (distinctColors.length >= maxColors) break;
+
+        const [r, g, b] = colorStr.split(',').map(Number);
+        
+        let isDistinct = true;
+        for (const existing of distinctColors) {
+            const dist = Math.sqrt(
+                Math.pow(r - existing[0], 2) +
+                Math.pow(g - existing[1], 2) +
+                Math.pow(b - existing[2], 2)
+            );
+            if (dist < minDistance) {
+                isDistinct = false;
+                break;
+            }
+        }
+
+        if (isDistinct) {
+            distinctColors.push([r, g, b, 1]);
+        }
+    }
+    
+    // Ensure we have at least some colors, if not, take top ones even if similar
+    if (distinctColors.length < 3) {
+         for (const colorStr of sortedColors) {
+            if (distinctColors.length >= 7) break;
+            const [r, g, b] = colorStr.split(',').map(Number);
+            distinctColors.push([r, g, b, 1]);
+         }
+    }
+
+    return distinctColors;
+}
+
+function applyExtractedPalette(colors) {
+    palette = {};
+    colors.forEach((color, index) => {
+        palette[(index + 1).toString()] = color;
+    });
+    updatePaletteTable();
+    savePalette();
+}
+
+// -----------------------------------------------------
 
 function generate() {
     stopAnimation();
@@ -1186,25 +1283,9 @@ document.getElementById('modeCombo').addEventListener('change', () => {
     const selectedValue = document.getElementById('modeCombo').value;
     if (selectedValue === 'Crystal') {
         window.location.href = 'kalei.html';
-    } else {
-        stopAnimation();
-        stopFullAnimation();
-        stopRecording();
-    }
-});
-document.getElementById('modeCombo').addEventListener('change', () => {
-    const selectedValue = document.getElementById('modeCombo').value;
-    if (selectedValue === 'Sphere') {
+    } else if (selectedValue === 'Sphere') {
         window.location.href = 'test.html';
-    } else {
-        stopAnimation();
-        stopFullAnimation();
-        stopRecording();
-    }
-});
-document.getElementById('modeCombo').addEventListener('change', () => {
-    const selectedValue = document.getElementById('modeCombo').value;
-    if (selectedValue === 'Kovrov') {
+    } else if (selectedValue === 'Kovrov') {
         window.location.href = 'kovrov.html';
     } else {
         stopAnimation();
